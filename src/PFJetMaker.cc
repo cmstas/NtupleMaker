@@ -70,7 +70,7 @@ PFJetMaker::PFJetMaker(const edm::ParameterSet& iConfig){
   produces<vector<vector<float>> > (branchprefix+"bDiscriminators"                             ).setBranchAlias(aliasprefix_+"_bDiscriminators"                         );
 
   pfJetsInputTag_                   = iConfig.getParameter<InputTag>   ( "pfJetsInputTag"                   );
-  pfCandidatesTag_		            = iConfig.getParameter<InputTag>   ("pfCandidatesTag"                   );
+//  pfCandidatesTag_		            = iConfig.getParameter<InputTag>   ("pfCandidatesTag"                   );
   pfJetPtCut_                       = iConfig.getParameter<double>     ( "pfJetPtCut"                       );
 
   //Jet Corrections from Global Tag
@@ -89,33 +89,6 @@ void PFJetMaker::beginJob() {}
 
 // ------------ method called once each job just after ending the event loop  ------------
 void PFJetMaker::endJob() {}
-
-// ------------ method called to produce the data  ------------
-float getFixGridRho(std::vector<float>& etabins,std::vector<float>& phibins, const pat::PackedCandidateCollection* pfCandidates) {
-
-  float etadist = etabins[1]-etabins[0];
-  float phidist = phibins[1]-phibins[0];
-  float etahalfdist = (etabins[1]-etabins[0])/2.;
-  float phihalfdist = (phibins[1]-phibins[0])/2.;
-  std::vector<float> sumPFNallSMDQ;
-  sumPFNallSMDQ.reserve(etabins.size()*phibins.size());
-  for (unsigned int ieta=0;ieta<etabins.size();++ieta) {
-    for (unsigned int iphi=0;iphi<phibins.size();++iphi) {
-      float pfniso_ieta_iphi = 0;
-      for(pat::PackedCandidateCollection::const_iterator pf_it = pfCandidates->begin(); pf_it != pfCandidates->end(); pf_it++) {
-        if (fabs(etabins[ieta]-pf_it->eta())>etahalfdist) continue;
-        if (fabs(reco::deltaPhi(phibins[iphi],pf_it->phi()))>phihalfdist) continue;
-        pfniso_ieta_iphi+=pf_it->pt();
-      }
-      sumPFNallSMDQ.push_back(pfniso_ieta_iphi);
-    }
-  }
-  float evt_smdq = 0;
-  sort(sumPFNallSMDQ.begin(),sumPFNallSMDQ.end());
-  if (sumPFNallSMDQ.size()%2) evt_smdq = sumPFNallSMDQ[(sumPFNallSMDQ.size()-1)/2];
-  else evt_smdq = (sumPFNallSMDQ[sumPFNallSMDQ.size()/2]+sumPFNallSMDQ[(sumPFNallSMDQ.size()-2)/2])/2.;
-  return evt_smdq/(etadist*phidist);
-}
 
 void PFJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
 
