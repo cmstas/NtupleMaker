@@ -32,10 +32,12 @@ process.p = cms.Path(
   process.vertexMaker *
   process.secondaryVertexMaker *
   process.pfCandidateMaker *
+  process.isoTrackMaker *
   process.eventMaker *
   process.electronMaker *
   process.muonMaker *
   process.pfJetMaker *
+  process.pfJetPUPPIMaker *
   process.subJetMaker *
   process.pfmetMaker *
   process.hltMakerSequence *

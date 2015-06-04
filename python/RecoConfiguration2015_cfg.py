@@ -36,15 +36,19 @@ from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
 process.load("RecoEgamma.ElectronIdentification.egmGsfElectronIDs_cfi")
 process.egmGsfElectronIDs.physicsObjectSrc = cms.InputTag('slimmedElectrons')
 from PhysicsTools.SelectorUtils.centralIDRegistry import central_id_registry
+dataFormat = DataFormat.MiniAOD
 process.egmGsfElectronIDSequence = cms.Sequence(process.egmGsfElectronIDs)
-my_id_modules = ['RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_PHYS14_PU20bx25_V0_miniAOD_cff']
+my_id_modules = ['RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_PHYS14_PU20bx25_V2_cff']
+
+switchOnVIDElectronIdProducer(process, dataFormat)
+
+#add them to the VID producer
 for idmod in my_id_modules:
     setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
 
-process.load("CMS3.NtupleMaker.cms2CoreSequences_cff")
-process.load("CMS3.NtupleMaker.cms2GENSequence_cff")
-#process.load('CMS3.NtupleMaker.pixelDigiMaker_cfi')
-process.load("CMS3.NtupleMaker.cms2PFSequence_cff")
+process.load("CMS3.NtupleMaker.cms3CoreSequences_cff")
+process.load("CMS3.NtupleMaker.cms3GENSequence_cff")
+process.load("CMS3.NtupleMaker.cms3PFSequence_cff")
 process.load('RecoJets.Configuration.RecoPFJets_cff') # Import the Jet RECO modules
 process.kt6PFJets.doRhoFastjet  = True                # Turn-on the FastJet density calculation
 process.ak5PFJets.doAreaFastjet = True                # Turn-on the FastJet jet area calculation for your favorite algorithm

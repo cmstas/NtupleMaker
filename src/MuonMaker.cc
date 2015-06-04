@@ -56,8 +56,6 @@ Implementation:
 #include "DataFormats/MuonReco/interface/MuonChamberMatch.h"
 #include "DataFormats/MuonReco/interface/MuonShower.h"
 
-#include "DataFormats/PatCandidates/interface/Muon.h"
-#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 
 //////////////
 // typedefs //
@@ -205,11 +203,11 @@ MuonMaker::MuonMaker( const ParameterSet& iConfig ) {
   // Cosmic Compatibility //
   //////////////////////////
 
-  produces<vector<float> >          ( branchprefix_ + "cosmicCompat"              ).setBranchAlias( aliasprefix_ + "_cosmicCompat"        );
-  produces<vector<float> >          ( branchprefix_ + "timeCompat"                ).setBranchAlias( aliasprefix_ + "_timeCompat"          );
-  produces<vector<float> >          ( branchprefix_ + "backToBackCompat"          ).setBranchAlias( aliasprefix_ + "_backToBackCompat"    );
-  produces<vector<float> >          ( branchprefix_ + "overlapCompat"             ).setBranchAlias( aliasprefix_ + "_overlapCompat"       );
-  produces<vector<float> >          ( branchprefix_ + "vertexCompat"              ).setBranchAlias( aliasprefix_ + "_vertexCompat"        );
+  //produces<vector<float> >          ( branchprefix_ + "cosmicCompat"              ).setBranchAlias( aliasprefix_ + "_cosmicCompat"        );
+  //produces<vector<float> >          ( branchprefix_ + "timeCompat"                ).setBranchAlias( aliasprefix_ + "_timeCompat"          );
+  //produces<vector<float> >          ( branchprefix_ + "backToBackCompat"          ).setBranchAlias( aliasprefix_ + "_backToBackCompat"    );
+  //produces<vector<float> >          ( branchprefix_ + "overlapCompat"             ).setBranchAlias( aliasprefix_ + "_overlapCompat"       );
+  //produces<vector<float> >          ( branchprefix_ + "vertexCompat"              ).setBranchAlias( aliasprefix_ + "_vertexCompat"        );
 
 
   //////////
@@ -263,15 +261,15 @@ MuonMaker::MuonMaker( const ParameterSet& iConfig ) {
   produces<vector<float> >          ( branchprefix_ + "ehadS9"                    ).setBranchAlias( aliasprefix_ + "_e_hadS9"             ); // energy in 3x3 HCAL towers 
   produces<vector<float> >          ( branchprefix_ + "ehoS9"                     ).setBranchAlias( aliasprefix_ + "_e_hoS9"              ); // energy in 3x3 HO towers 
 
-  produces<vector<float> >          ( branchprefix_ + "tower"         ).setBranchAlias( aliasprefix_ + "_tower"           );
-  produces<vector<float> >          ( branchprefix_ + "towerS9"       ).setBranchAlias( aliasprefix_ + "_towerS9"         ); 
+  //produces<vector<float> >          ( branchprefix_ + "tower"         ).setBranchAlias( aliasprefix_ + "_tower"           );
+  //produces<vector<float> >          ( branchprefix_ + "towerS9"       ).setBranchAlias( aliasprefix_ + "_towerS9"         ); 
   produces<vector<float> >          ( branchprefix_ + "emS25"         ).setBranchAlias( aliasprefix_ + "_emS25"           ); 
   produces<vector<float> >          ( branchprefix_ + "emMax"         ).setBranchAlias( aliasprefix_ + "_emMax"           ); 
   produces<vector<float> >          ( branchprefix_ + "hadMax"        ).setBranchAlias( aliasprefix_ + "_hadMax"          ); 
   produces<vector<float> >          ( branchprefix_ + "ecaltime"      ).setBranchAlias( aliasprefix_ + "_ecal_time"       ); 
-  produces<vector<float> >          ( branchprefix_ + "ecaltimeError" ).setBranchAlias( aliasprefix_ + "_ecal_timeError"  ); 
+  //produces<vector<float> >          ( branchprefix_ + "ecaltimeError" ).setBranchAlias( aliasprefix_ + "_ecal_timeError"  ); 
   produces<vector<float> >          ( branchprefix_ + "hcaltime"      ).setBranchAlias( aliasprefix_ + "_hcal_time"       ); 
-  produces<vector<float> >          ( branchprefix_ + "hcaltimeError" ).setBranchAlias( aliasprefix_ + "_hcal_timeError"  ); 
+  //produces<vector<float> >          ( branchprefix_ + "hcaltimeError" ).setBranchAlias( aliasprefix_ + "_hcal_timeError"  ); 
   produces<vector<int> >            ( branchprefix_ + "ecalrawId"     ).setBranchAlias( aliasprefix_ + "_ecal_rawId"      ); 
   produces<vector<int> >            ( branchprefix_ + "hcalrawId"     ).setBranchAlias( aliasprefix_ + "_hcal_rawId"      ); 
 
@@ -303,7 +301,7 @@ MuonMaker::MuonMaker( const ParameterSet& iConfig ) {
   produces<vector<int> >            ( branchprefix_ + "muonBestTrackType"         ).setBranchAlias( aliasprefix_ + "_muonBestTrackType"   ); 
   produces<vector<LorentzVector> >  ( branchprefix_ + "trkp4"                     ).setBranchAlias( aliasprefix_ + "_trk_p4"              ); // track p4            
   produces<vector<LorentzVector> >  ( branchprefix_ + "vertexp4"                  ).setBranchAlias( aliasprefix_ + "_vertex_p4"           ); // from the silicon fit
-  produces<vector<int>   >          ( branchprefix_ + "trkidx"                    ).setBranchAlias( aliasprefix_ + "_trkidx"              ); // track index matched to muon
+  //produces<vector<int>   >          ( branchprefix_ + "trkidx"                    ).setBranchAlias( aliasprefix_ + "_trkidx"              ); // track index matched to muon
   produces<vector<float> >          ( branchprefix_ + "d0"                        ).setBranchAlias( aliasprefix_ + "_d0"                  ); // impact parameter at the point of closest approach  using the tracker fit
   produces<vector<float> >          ( branchprefix_ + "z0"                        ).setBranchAlias( aliasprefix_ + "_z0"                  ); // z position of the point of closest approach. From the si track    
   produces<vector<float> >          ( branchprefix_ + "d0corr"                    ).setBranchAlias( aliasprefix_ + "_d0corr"              ); // corrected impact parameter at the point of closest approach. From si track  
@@ -438,6 +436,12 @@ MuonMaker::MuonMaker( const ParameterSet& iConfig ) {
   produces<vector<LorentzVector> >("musmcpatMatchp4"            	).setBranchAlias("mus_mc_patMatch_p4"          		);
   produces<vector<float>         >("musmcpatMatchdr"            	).setBranchAlias("mus_mc_patMatch_dr"                  	);
 
+  produces<vector<float>         >("musminiIsouncor"       ).setBranchAlias("mus_miniIso_uncor"                       	);
+  produces<vector<float>         >("musminiIsoch"       ).setBranchAlias("mus_miniIso_ch"                       	);
+  produces<vector<float>         >("musminiIsonh"       ).setBranchAlias("mus_miniIso_nh"                       	);
+  produces<vector<float>         >("musminiIsoem"       ).setBranchAlias("mus_miniIso_em"                       	);
+  produces<vector<float>         >("musminiIsodb"       ).setBranchAlias("mus_miniIso_db"                       	);
+
 } // end Constructor
 
 void MuonMaker::beginJob () {}  // method called once each job just before starting event loop
@@ -553,11 +557,11 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
   // Cosmics Compatibility //
   ///////////////////////////
 
-  auto_ptr<vector<float> > cosmicCompat     ( new vector<float> );
-  auto_ptr<vector<float> > timeCompat       ( new vector<float> );
-  auto_ptr<vector<float> > backToBackCompat ( new vector<float> );
-  auto_ptr<vector<float> > overlapCompat    ( new vector<float> );
-  auto_ptr<vector<float> > vertexCompat     ( new vector<float> );
+  //auto_ptr<vector<float> > cosmicCompat     ( new vector<float> );
+  //auto_ptr<vector<float> > timeCompat       ( new vector<float> );
+  //auto_ptr<vector<float> > backToBackCompat ( new vector<float> );
+  //auto_ptr<vector<float> > overlapCompat    ( new vector<float> );
+  //auto_ptr<vector<float> > vertexCompat     ( new vector<float> );
 
 
   ///////////
@@ -612,15 +616,15 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
   auto_ptr<vector<float> >         vector_mus_e_hadS9             ( new vector<float>          );
   auto_ptr<vector<float> >         vector_mus_e_hoS9              ( new vector<float>          );
 
-  auto_ptr<vector<float> >         vector_mus_tower               ( new vector<float>          );
-  auto_ptr<vector<float> >         vector_mus_towerS9             ( new vector<float>          );
+  //auto_ptr<vector<float> >         vector_mus_tower               ( new vector<float>          );
+  //auto_ptr<vector<float> >         vector_mus_towerS9             ( new vector<float>          );
   auto_ptr<vector<float> >         vector_mus_emS25               ( new vector<float>          );
   auto_ptr<vector<float> >         vector_mus_emMax               ( new vector<float>          );
   auto_ptr<vector<float> >         vector_mus_hadMax              ( new vector<float>          );
   auto_ptr<vector<float> >         vector_mus_ecal_time           ( new vector<float>          );
-  auto_ptr<vector<float> >         vector_mus_ecal_timeError      ( new vector<float>          );
+  //auto_ptr<vector<float> >         vector_mus_ecal_timeError      ( new vector<float>          );
   auto_ptr<vector<float> >         vector_mus_hcal_time           ( new vector<float>          );
-  auto_ptr<vector<float> >         vector_mus_hcal_timeError      ( new vector<float>          );
+  //auto_ptr<vector<float> >         vector_mus_hcal_timeError      ( new vector<float>          );
   auto_ptr<vector<int> >           vector_mus_ecal_rawId          ( new vector<int>            );
   auto_ptr<vector<int> >           vector_mus_hcal_rawId          ( new vector<int>            );
 
@@ -653,7 +657,7 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
   auto_ptr<vector<int> >           vector_mus_muonBestTrackType   ( new vector<int>            );        
   auto_ptr<vector<LorentzVector> > vector_mus_trk_p4              ( new vector<LorentzVector>  );
   auto_ptr<vector<LorentzVector> > vector_mus_vertex_p4           ( new vector<LorentzVector> );
-  auto_ptr<vector<int>   >         vector_mus_trkidx              ( new vector<int>            );
+  //auto_ptr<vector<int>   >         vector_mus_trkidx              ( new vector<int>            );
   auto_ptr<vector<float> >         vector_mus_d0                  ( new vector<float>          );      
   auto_ptr<vector<float> >         vector_mus_z0                  ( new vector<float>          );      
   auto_ptr<vector<float> >         vector_mus_d0corr              ( new vector<float>          );      
@@ -796,6 +800,12 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
   auto_ptr<vector<LorentzVector> >       mus_mc_patMatch_p4          (new vector<LorentzVector>);
   auto_ptr<vector<float>         >       mus_mc_patMatch_dr          (new vector<float>        );
 
+  auto_ptr<vector<float>   >       mus_miniIso_uncor                  (new vector<float>        );  	
+  auto_ptr<vector<float>   >       mus_miniIso_ch                  (new vector<float>        );  	
+  auto_ptr<vector<float>   >       mus_miniIso_nh                  (new vector<float>        );  	
+  auto_ptr<vector<float>   >       mus_miniIso_em                  (new vector<float>        );  	
+  auto_ptr<vector<float>   >       mus_miniIso_db                  (new vector<float>        );  	
+
 
 ////////////////////////////
 // --- Fill Muon Data --- //
@@ -838,14 +848,16 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
   ///////////////////////////
   ESHandle<TransientTrackBuilder> theTTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theTTBuilder);
-
+  */
   ///////////////////////
   // Get PF Candidates //
   ///////////////////////
 
-  iEvent.getByLabel( pfCandsInputTag , pfCand_h );
+  //iEvent.getByLabel( pfCandsInputTag , pfCand_h );
+  iEvent.getByLabel(pfCandsInputTag, packPfCand_h);
+  pfCandidates  = packPfCand_h.product();
 
-*/
+
   /////////////////////////////////////
   // Get BeamSpot from BeamSpotMaker //
   /////////////////////////////////////
@@ -882,7 +894,7 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
     const TrackRef                staTrack                = muon->outerTrack();
     const TrackRef                bestTrack               = muon->muonBestTrack();
     const MuonQuality             quality                 = muon->combinedQuality();
-//    const MuonCosmicCompatibility muonCosmicCompatibility = CosmicMap.isValid() ? (*CosmicMap)[muonRef] : MuonCosmicCompatibility(); //protection for fast sim
+    //const MuonCosmicCompatibility muonCosmicCompatibility = CosmicMap.isValid() ? (*CosmicMap)[muonRef] : MuonCosmicCompatibility(); //protection for fast sim
     const VertexCollection*       vertexCollection        = vertexHandle.product();
 //    std::cout << __LINE__ <<std::endl;
 
@@ -1010,9 +1022,9 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
     // Cosmic Compatibility //
     //////////////////////////
 
-//    cosmicCompat     -> push_back( muonCosmicCompatibility.cosmicCompatibility     );
- //   timeCompat       -> push_back( muonCosmicCompatibility.timeCompatibility       );
-   // backToBackCompat -> push_back( muonCosmicCompatibility.backToBackCompatibility );
+    //cosmicCompat     -> push_back( muonCosmicCompatibility.cosmicCompatibility     );
+    //timeCompat       -> push_back( muonCosmicCompatibility.timeCompatibility       );
+    //backToBackCompat -> push_back( muonCosmicCompatibility.backToBackCompatibility );
     //overlapCompat    -> push_back( muonCosmicCompatibility.overlapCompatibility    );
     //vertexCompat     -> push_back( muonCosmicCompatibility.vertexCompatibility     );
 
@@ -1114,15 +1126,15 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
 
     //calEnergy is an object of type reco::MuonEnergy, learn about it at
     //cmslxr.fnal.gov/lxr/source/DataFormats/MuonReco/interface/MuonEnergy.h
-    vector_mus_tower           -> push_back( energyIsValid ? muon->calEnergy().tower                         : -9999. );
-    vector_mus_towerS9         -> push_back( energyIsValid ? muon->calEnergy().towerS9                       : -9999. );
+    //vector_mus_tower           -> push_back( energyIsValid ? muon->calEnergy().tower                         : -9999. );
+    //vector_mus_towerS9         -> push_back( energyIsValid ? muon->calEnergy().towerS9                       : -9999. );
     vector_mus_emS25           -> push_back( energyIsValid ? muon->calEnergy().emS25                         : -9999. );
     vector_mus_emMax           -> push_back( energyIsValid ? muon->calEnergy().emMax                         : -9999. );
     vector_mus_hadMax          -> push_back( energyIsValid ? muon->calEnergy().hadMax                        : -9999. );
     vector_mus_ecal_time       -> push_back( energyIsValid ? muon->calEnergy().ecal_time                     : -9999. );
-    vector_mus_ecal_timeError  -> push_back( energyIsValid ? muon->calEnergy().ecal_timeError                : -9999. );
+    //vector_mus_ecal_timeError  -> push_back( energyIsValid ? muon->calEnergy().ecal_timeError                : -9999. );
     vector_mus_hcal_time       -> push_back( energyIsValid ? muon->calEnergy().hcal_time                     : -9999. );
-    vector_mus_hcal_timeError  -> push_back( energyIsValid ? muon->calEnergy().hcal_timeError                : -9999. );
+    //vector_mus_hcal_timeError  -> push_back( energyIsValid ? muon->calEnergy().hcal_timeError                : -9999. );
     vector_mus_ecal_rawId      -> push_back( energyIsValid ? muon->calEnergy().ecal_id.rawId()               : -9999. );
     vector_mus_hcal_rawId      -> push_back( energyIsValid ? muon->calEnergy().hcal_id.rawId()               : -9999. );
 
@@ -1158,7 +1170,7 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
     vector_mus_muonBestTrackType  -> push_back( muon->muonBestTrackType() );
     vector_mus_trk_p4             -> push_back( siTrack.isNonnull()     ? LorentzVector( siTrack.get()->px() , siTrack.get()->py() , siTrack.get()->pz() , siTrack.get()->p() ) : LorentzVector(     0.0,     0.0,     0.0,     0.0) );
     vector_mus_vertex_p4          -> push_back( siTrack.isNonnull()     ? LorentzVector( siTrack->vx()       , siTrack->vy()       , siTrack->vz()       , 0.0                ) : LorentzVector( -9999.0, -9999.0, -9999.0, -9999.0) );
-    vector_mus_trkidx             -> push_back( siTrack.isNonnull()     ? static_cast<int>(siTrack.key())                      : -9999         );
+    //vector_mus_trkidx             -> push_back( siTrack.isNonnull()     ? static_cast<int>(siTrack.key())                      : -9999         );
     vector_mus_d0                 -> push_back( siTrack.isNonnull()     ? siTrack->d0()                                        : -9999.        );
     vector_mus_z0                 -> push_back( siTrack.isNonnull()     ? siTrack->dz()                                        : -9999.        );
     vector_mus_d0corr             -> push_back( siTrack.isNonnull()     ? -1*(siTrack->dxy(beamSpot))                          : -9999.        );
@@ -1380,8 +1392,21 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
       mus_mc_patMatch_dr      ->push_back( -999.  );
     }
 
-
-
+    //////////////////////
+    // mini-isolation   //
+    //////////////////////
+    
+    float minichiso     = 0.;
+    float mininhiso     = 0.;
+    float miniemiso     = 0.;
+    float minidbiso     = 0.;
+    muMiniIso(muon, true, 0.5, minichiso, mininhiso, miniemiso, minidbiso);
+    mus_miniIso_uncor   ->push_back( minichiso + mininhiso + miniemiso );
+    mus_miniIso_ch      ->push_back( minichiso );
+    mus_miniIso_nh      ->push_back( mininhiso );
+    mus_miniIso_em      ->push_back( miniemiso );
+    mus_miniIso_db      ->push_back( minidbiso );
+    
     muonIndex++;
 
   } // end loop on muons
@@ -1497,8 +1522,8 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
   // Cosmic Compatibility //
   //////////////////////////
 
-//  iEvent.put( cosmicCompat                  , branchprefix_ + "cosmicCompat"       );
- // iEvent.put( timeCompat                    , branchprefix_ + "timeCompat"         );
+  //iEvent.put( cosmicCompat                  , branchprefix_ + "cosmicCompat"       );
+  //iEvent.put( timeCompat                    , branchprefix_ + "timeCompat"         );
   //iEvent.put( backToBackCompat              , branchprefix_ + "backToBackCompat"   );
   //iEvent.put( overlapCompat                 , branchprefix_ + "overlapCompat"      );
   //iEvent.put( vertexCompat                  , branchprefix_ + "vertexCompat"       );
@@ -1555,15 +1580,15 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
   iEvent.put( vector_mus_e_hadS9            , branchprefix_ + "ehadS9"             );
   iEvent.put( vector_mus_e_hoS9             , branchprefix_ + "ehoS9"              );
 
-  iEvent.put( vector_mus_tower              , branchprefix_ + "tower"              );
-  iEvent.put( vector_mus_towerS9            , branchprefix_ + "towerS9"            );
+  //iEvent.put( vector_mus_tower              , branchprefix_ + "tower"              );
+  //iEvent.put( vector_mus_towerS9            , branchprefix_ + "towerS9"            );
   iEvent.put( vector_mus_emS25              , branchprefix_ + "emS25"              );
   iEvent.put( vector_mus_emMax              , branchprefix_ + "emMax"              );
   iEvent.put( vector_mus_hadMax             , branchprefix_ + "hadMax"             );
   iEvent.put( vector_mus_ecal_time          , branchprefix_ + "ecaltime"           );
-  iEvent.put( vector_mus_ecal_timeError     , branchprefix_ + "ecaltimeError"      );
+  //iEvent.put( vector_mus_ecal_timeError     , branchprefix_ + "ecaltimeError"      );
   iEvent.put( vector_mus_hcal_time          , branchprefix_ + "hcaltime"           );
-  iEvent.put( vector_mus_hcal_timeError     , branchprefix_ + "hcaltimeError"      );
+  //iEvent.put( vector_mus_hcal_timeError     , branchprefix_ + "hcaltimeError"      );
   iEvent.put( vector_mus_ecal_rawId         , branchprefix_ + "ecalrawId"          );
   iEvent.put( vector_mus_hcal_rawId         , branchprefix_ + "hcalrawId"          );
   
@@ -1595,7 +1620,7 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
   iEvent.put( vector_mus_muonBestTrackType  , branchprefix_ + "muonBestTrackType"  );
   iEvent.put( vector_mus_trk_p4             , branchprefix_ + "trkp4"              );
   iEvent.put( vector_mus_vertex_p4          , branchprefix_ + "vertexp4"           );
-  iEvent.put( vector_mus_trkidx             , branchprefix_ + "trkidx"             );
+  //iEvent.put( vector_mus_trkidx             , branchprefix_ + "trkidx"             );
   iEvent.put( vector_mus_d0                 , branchprefix_ + "d0"                 );
   iEvent.put( vector_mus_z0                 , branchprefix_ + "z0"                 );
   iEvent.put( vector_mus_d0corr             , branchprefix_ + "d0corr"             );
@@ -1723,6 +1748,12 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
   iEvent.put( mus_mc_patMatch_p4           		,"musmcpatMatchp4"          	);
   iEvent.put( mus_mc_patMatch_dr          		,"musmcpatMatchdr"          	);
 
+  iEvent.put(mus_miniIso_uncor       , branchprefix_ + "miniIsouncor"    );
+  iEvent.put(mus_miniIso_ch       , "musminiIsoch"    );
+  iEvent.put(mus_miniIso_nh       , "musminiIsonh"    );
+  iEvent.put(mus_miniIso_em       , "musminiIsoem"    );
+  iEvent.put(mus_miniIso_db       , "musminiIsodb"    );
+
 
 } //
 
@@ -1769,6 +1800,44 @@ double MuonMaker::muonIsoValuePF(const Muon& mu, const Vertex& vtx, float coner,
     }
   } 
   return pfciso+pfniso;
+}
+void MuonMaker::muIsoCustomCone( edm::View<pat::Muon>::const_iterator& mu, float dr, bool useVetoCones, float ptthresh, float &chiso, float &nhiso, float &emiso, float & dbiso){
+  chiso     = 0.;
+  nhiso     = 0.;
+  emiso     = 0.;
+  dbiso     = 0.;
+  float deadcone_ch = 0.0001;
+  float deadcone_pu = 0.01;
+  float deadcone_ph = 0.01;
+  float deadcone_nh = 0.01;
+
+  for( pat::PackedCandidateCollection::const_iterator pf_it = pfCandidates->begin(); pf_it != pfCandidates->end(); pf_it++ ) {
+    float thisDR = fabs(ROOT::Math::VectorUtil::DeltaR(pf_it->p4(),mu->p4()));
+    if ( thisDR>dr ) continue;  
+    float pt = pf_it->p4().pt();
+    float id = pf_it->pdgId();
+    if ( fabs(id)==211 ) {
+      if (pf_it->fromPV() > 1 && (!useVetoCones || thisDR > deadcone_ch) ) chiso+=pt;
+      else if ((pf_it->fromPV() <= 1) && (pt > ptthresh) && (!useVetoCones || thisDR > deadcone_pu)) dbiso+=pt;
+    }
+    if ( fabs(id)==130 && (pt > ptthresh) && (!useVetoCones || thisDR > deadcone_nh) ) nhiso+=pt;
+    if ( fabs(id)==22 && (pt > ptthresh) && (!useVetoCones || thisDR > deadcone_ph) ) emiso+=pt;
+  }
+  //if (useDBcor) correction = 0.5 * deltaBeta;
+  //else if (useEAcor) correction = evt_fixgrid_all_rho() * elEA03(elIdx) * (dr/0.3) * (dr/0.3);
+  //float absiso = chiso + std::max(float(0.0), nhiso + emiso - correction);
+  //return absiso/(mu->p4().pt());
+  return;
+}
+
+void MuonMaker::muMiniIso( edm::View<pat::Muon>::const_iterator& mu, bool useVetoCones, float ptthresh, float &chiso, float &nhiso, float &emiso, float & dbiso){
+
+  float pt = mu->p4().pt();
+  float dr = 0.2;
+  if (pt>50) dr = 10./pt;
+  if (pt>200) dr = 0.05;
+  muIsoCustomCone(mu,dr,useVetoCones,ptthresh, chiso, nhiso, emiso, dbiso);
+  return;
 }
 
 

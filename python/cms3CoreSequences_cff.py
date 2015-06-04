@@ -8,14 +8,12 @@ from CMS3.NtupleMaker.eventMaker_cfi               import *
 from CMS3.NtupleMaker.hcalNoiseSummaryMaker_cfi    import *
 from CMS3.NtupleMaker.hltMaker_cff                 import *
 from CMS3.NtupleMaker.hypDilepMaker_cfi            import *
-#from CMS3.NtupleMaker.luminosityMaker_cfi          import *
-#from CMS3.NtupleMaker.metMaker_cfi                 import *
+from CMS3.NtupleMaker.luminosityMaker_cfi          import *
 from CMS3.NtupleMaker.muonMaker_cfi                import *
 from CMS3.NtupleMaker.photonMaker_cfi              import *
 from CMS3.NtupleMaker.recoConversionMaker_cfi      import *
 from CMS3.NtupleMaker.secVertexMaker_cfi           import *
 from CMS3.NtupleMaker.vertexMaker_cfi              import *
-#from CMS3.NtupleMaker.beamHaloMaker_cfi            import *
 from CMS3.NtupleMaker.fastJetSequence_cff          import *
 from CMS3.NtupleMaker.pfJetMaker_cfi               import *
 from CMS3.NtupleMaker.subJetMaker_cfi              import *
