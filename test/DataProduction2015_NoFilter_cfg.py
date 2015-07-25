@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 from Configuration.EventContent.EventContent_cff        import *
 
 import CMS3.NtupleMaker.configProcessName as configProcessName
-configProcessName.name="RECO"
+configProcessName.name="PAT"
 
 #CMS3
 process = cms.Process("CMS3")
