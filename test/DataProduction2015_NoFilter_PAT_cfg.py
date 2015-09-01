@@ -165,8 +165,36 @@ if not applyResiduals:
 
 # end Run corrected MET maker
 
+if not runOnData:
+   process.load("CMS3.NtupleMaker.genJetMaker_cfi")
 # #Run jet tool box
-# jetToolbox( process, 'ak4', 'ak4JetSubs', 'out',PUMethod='',miniAOD=True,JETCorrLevels=['L1FastJet','L2Relative', 'L3Absolute'])
+jetToolbox( process, 'ak10', 'ak10JetSubs', 'out', 
+            PUMethod='CHS',
+            Cut = 'pt > 100',
+            #runOnMC=not runOnData,
+            addPrunedSubjets=True, 
+            addSoftDropSubjets=True,
+            addTrimming=True,
+            addPruning=True,
+            addSoftDrop=True,
+            addFiltering=True,
+            addNsub=True,
+            miniAOD=True,
+            JETCorrLevels=['None'] ) 
+jetToolbox( process, 'ak10', 'ak10JetSubs', 'out', 
+            PUMethod='Puppi',
+            Cut = 'pt > 100',
+            #runOnMC=not runOnData,
+            addPrunedSubjets=True, 
+            addSoftDropSubjets=True,
+            addTrimming=True,
+            addPruning=True,
+            addSoftDrop=True,
+            addFiltering=True,
+            addNsub=True,
+            miniAOD=True,
+            JETCorrLevels=['None'] ) 
+
 
 process.p = cms.Path( 
   process.metFilterMaker *
@@ -185,7 +213,9 @@ process.p = cms.Path(
   process.pfJetPUPPIMaker *
   # process.METToolboxJetMaker *
   process.subJetMaker *
-#  process.ca12subJetMaker *
+  process.ak10subJetMaker *
+ # process.genak10JetMaker*
+  process.ak10subJetMakerPuppi *
   process.pfmetMaker *
   # process.T1pfmetMaker *
   # process.T1pfmetNoHFMaker *

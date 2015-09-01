@@ -20,4 +20,6 @@ from CMS3.NtupleMaker.subJetMaker_cfi              import *
 from CMS3.NtupleMaker.muToTrigAssMaker_cfi         import *
 from CMS3.NtupleMaker.elToTrigAssMaker_cfi         import *
 from CMS3.NtupleMaker.metFilterMaker_cfi           import *
+from CMS3.NtupleMaker.fatJetMaker_cfi           import *
+#from CMS3.NtupleMaker.genJetMaker_cfi           import *
 from CMS3.NtupleMaker.sParmMaker_cff               import * # doesn't always get loaded

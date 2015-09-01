@@ -69,6 +69,7 @@ for idmod in my_id_modules:
 #Load Ntuple producer cff
 process.load("CMS3.NtupleMaker.cms3CoreSequences_cff")
 process.load("CMS3.NtupleMaker.cms3PFSequence_cff")
+#from CMS3.NtupleMaker.genJetMaker_cfi           import *
 
 # Hypothesis cuts
 process.hypDilepMaker.TightLepton_PtCut  = cms.double(10.0)
@@ -165,8 +166,36 @@ if not applyResiduals:
 
 # end Run corrected MET maker
 
+if not runOnData:
+   process.load("CMS3.NtupleMaker.genJetMaker_cfi")
 # #Run jet tool box
-# jetToolbox( process, 'ak4', 'ak4JetSubs', 'out',PUMethod='',miniAOD=True,JETCorrLevels=['L1FastJet','L2Relative', 'L3Absolute'])
+jetToolbox( process, 'ak10', 'ak10JetSubs', 'out', 
+            PUMethod='CHS',
+            Cut = 'pt > 100',
+            #runOnMC=not runOnData,
+            addPrunedSubjets=True, 
+            addSoftDropSubjets=True,
+            addTrimming=True,
+            addPruning=True,
+            addSoftDrop=True,
+            addFiltering=True,
+            addNsub=True,
+            miniAOD=True,
+            JETCorrLevels=['None'] ) 
+jetToolbox( process, 'ak10', 'ak10JetSubs', 'out', 
+            PUMethod='Puppi',
+            Cut = 'pt > 100',
+            #runOnMC=not runOnData,
+            addPrunedSubjets=True, 
+            addSoftDropSubjets=True,
+            addTrimming=True,
+            addPruning=True,
+            addSoftDrop=True,
+            addFiltering=True,
+            addNsub=True,
+            miniAOD=True,
+            JETCorrLevels=['None'] ) 
+
 
 process.p = cms.Path( 
   process.metFilterMaker *
@@ -185,7 +214,8 @@ process.p = cms.Path(
   process.pfJetPUPPIMaker *
   # process.METToolboxJetMaker * # take this out for 75X validation
   process.subJetMaker *
-#  process.ca12subJetMaker *
+  process.ak10subJetMaker *
+  process.ak10subJetMakerPuppi *
   process.pfmetMaker *
   # process.T1pfmetMaker *       # take this out for 75X validation
   # process.T1pfmetNoHFMaker *   # take this out for 75X validation
