@@ -97,10 +97,10 @@ void FatJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
     if ( pfjet_it->hasUserFloat(NjettinessPrefix_+":tau2") ) nJettinessTau2 = pfjet_it->userFloat(NjettinessPrefix_+":tau2");
     if ( pfjet_it->hasUserFloat(NjettinessPrefix_+":tau3") ) nJettinessTau3 = pfjet_it->userFloat(NjettinessPrefix_+":tau3");
     if ( pfjet_it->hasUserFloat(NjettinessPrefix_+":tau4") ) nJettinessTau4 = pfjet_it->userFloat(NjettinessPrefix_+":tau4");
-    if ( pfjet_it->hasUserFloat(LinksPrefix_+"PrunedLinks") ) prunedMass = pfjet_it->userFloat(LinksPrefix_+"PrunedLinks");
-    if ( pfjet_it->hasUserFloat(LinksPrefix_+"TrimmedLinks") ) trimmedMass = pfjet_it->userFloat(LinksPrefix_+"TrimmedLinks");
-    if ( pfjet_it->hasUserFloat(LinksPrefix_+"FilteredLinks") ) filteredMass = pfjet_it->userFloat(LinksPrefix_+"FilteredLinks");
-    if ( pfjet_it->hasUserFloat(LinksPrefix_+"MassDropFilteredLinks") ) massDropFilteredMass = pfjet_it->userFloat(LinksPrefix_+"MassDropFilteredLinks");
+    if ( pfjet_it->hasUserFloat(LinksPrefix_+"PrunedMass") ) prunedMass = pfjet_it->userFloat(LinksPrefix_+"PrunedMass");
+    if ( pfjet_it->hasUserFloat(LinksPrefix_+"TrimmedMass") ) trimmedMass = pfjet_it->userFloat(LinksPrefix_+"TrimmedMass");
+    if ( pfjet_it->hasUserFloat(LinksPrefix_+"FilteredMass") ) filteredMass = pfjet_it->userFloat(LinksPrefix_+"FilteredMass");
+    if ( pfjet_it->hasUserFloat(LinksPrefix_+"MassDropFilteredMass") ) massDropFilteredMass = pfjet_it->userFloat(LinksPrefix_+"MassDropFilteredMass");
 //    reco::CATopJetTagInfo const * tagInfo =  dynamic_cast<reco::CATopJetTagInfo const *>( pfjet_it->tagInfo("caTop"));
 //    if (tagInfo) topMass = tagInfo->properties().topMass;
 //    if (tagInfo) minMass = tagInfo->properties().minMass;
