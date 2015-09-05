@@ -38,7 +38,7 @@ git clone https://github.com/cmstas/Dictionaries $CMSSW_BASE/src/CMS3/Dictionari
 
 git clone https://github.com/cms-jet/JetToolbox $CMSSW_BASE/src/JMEAnalysis/JetToolbox -b jetToolbox_74X_PuppiWithGroomers 
 pushd $CMSSW_BASE/src/JMEAnalysis/JetToolbox
-git checout 7f0cfaa7192520ee131cdae69feb0083f415e317
+git checkout 7f0cfaa7192520ee131cdae69feb0083f415e317
 popd
 # ####################
 # #       puppi     #
