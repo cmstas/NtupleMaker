@@ -48,6 +48,7 @@ private:
   virtual void endJob() ;
       
   // ----------member data ---------------------------
+  edm::EDGetTokenT<edm::View<pat::Jet> > pfJetsToken;
   edm::InputTag pfJetsInputTag_;
   double         pfJetPtCut_;
   std::string aliasprefix_;

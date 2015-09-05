@@ -44,7 +44,8 @@ FatJetMaker::FatJetMaker(const edm::ParameterSet& iConfig){
   produces<vector<float> >         ( branchprefix+"massDropFilteredMass"             ).setBranchAlias( aliasprefix_+"_massDropFilteredMass"      );
 
   // Embedded b-tagging information (miniAOD only)
-  pfJetsInputTag_                   = iConfig.getParameter<InputTag>   ( "pfJetsInputTag"                   );
+  //pfJetsInputTag_                   = iConfig.getParameter<InputTag>   ( "pfJetsInputTag"                   );
+  pfJetsToken = consumes<edm::View<pat::Jet> >(iConfig.getParameter<edm::InputTag>("pfJetsInputTag"));
   //pfJetPtCut_                       = iConfig.getParameter<double>     ( "pfJetPtCut"                       );
 }
 
@@ -82,7 +83,8 @@ void FatJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   auto_ptr<vector<float> >         pfjets_massDropFilteredMass     (new vector<float>          );  
 
   Handle<View<pat::Jet> > pfJetsHandle;
-  iEvent.getByLabel(pfJetsInputTag_, pfJetsHandle);
+  //iEvent.getByLabel(pfJetsInputTag_, pfJetsHandle);
+  iEvent.getByToken(pfJetsToken, pfJetsHandle);
   for(View<pat::Jet>::const_iterator pfjet_it = pfJetsHandle->begin(); pfjet_it != pfJetsHandle->end(); pfjet_it++){
    if(pfjet_it->p4().pt()<100) continue;
    pfjets_p4                        ->push_back( LorentzVector( pfjet_it->p4() ) * pfjet_it->jecFactor("Uncorrected")     );
