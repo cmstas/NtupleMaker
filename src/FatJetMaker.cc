@@ -35,7 +35,7 @@ FatJetMaker::FatJetMaker(const edm::ParameterSet& iConfig){
   produces<vector<float> >         ( branchprefix+"nJettinessTau2"                   ).setBranchAlias( aliasprefix_+"_nJettinessTau2"            );
   produces<vector<float> >         ( branchprefix+"nJettinessTau3"                   ).setBranchAlias( aliasprefix_+"_nJettinessTau3"            );
   produces<vector<float> >         ( branchprefix+"nJettinessTau4"                   ).setBranchAlias( aliasprefix_+"_nJettinessTau4"            );
-  produces<vector<float> >         ( branchprefix+"nSubJets"                         ).setBranchAlias( aliasprefix_+"_nSubJets"                  );
+//  produces<vector<float> >         ( branchprefix+"nSubJets"                         ).setBranchAlias( aliasprefix_+"_nSubJets"                  );
 //  produces<vector<float> >         ( branchprefix+"topMass"                          ).setBranchAlias( aliasprefix_+"_topMass"                   );
 //  produces<vector<float> >         ( branchprefix+"minMass"                          ).setBranchAlias( aliasprefix_+"_minMass"                   );
   produces<vector<float> >         ( branchprefix+"prunedMass"                       ).setBranchAlias( aliasprefix_+"_prunedMass"                );
