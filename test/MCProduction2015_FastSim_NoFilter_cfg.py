@@ -3,7 +3,7 @@ from Configuration.EventContent.EventContent_cff   import *
 
 import CMS3.NtupleMaker.configProcessName as configProcessName
 configProcessName.name="PAT"
-configProcessName.fastSimName="RECO"
+configProcessName.fastSimName="HLT"
 
 # CMS3
 process = cms.Process("CMS3")
@@ -66,7 +66,6 @@ for idmod in my_id_modules:
 process.load("CMS3.NtupleMaker.cms3CoreSequences_cff")
 process.load("CMS3.NtupleMaker.cms3GENSequence_cff")
 process.load("CMS3.NtupleMaker.cms3PFSequence_cff")
-from CMS3.NtupleMaker.metFilterMaker_cfi           import * # not loaded for FS samples
 
 # Hypothesis cuts
 process.hypDilepMaker.TightLepton_PtCut  = cms.double(10.0)
@@ -75,7 +74,7 @@ process.hypDilepMaker.LooseLepton_PtCut  = cms.double(10.0)
 #Options for Input
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(
-                                "file:/hadoop/cms/phedex/store/mc/RunIISpring15DR74/TTTo2L2Nu_13TeV-powheg/MINIAODSIM/Asympt25ns_MCRUN2_74_V9-v1/50000/004FB226-F005-E511-AE60-00259073E382.root",
+                                'file:/hadoop/cms/phedex/store/mc/RunIISpring15FSPremix/TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/MCRUN2_74_V9-v1/10000/FCB7B942-C75F-E511-8C7A-000F53273714.root',
                             )
 )
 process.source.noEventSort = cms.untracked.bool( True )
@@ -178,9 +177,8 @@ process.out.outputCommands.extend(cms.untracked.vstring('keep *_*Maker*_*_CMS3*'
 process.out.outputCommands.extend(cms.untracked.vstring('drop *_cms2towerMaker*_*_CMS3*'))
 process.out.outputCommands.extend(cms.untracked.vstring('drop CaloTowers*_*_*_CMS3*'))
 
-
 process.p = cms.Path( 
-  process.metFilterMaker *
+  # process.metFilterMaker *
   process.hcalNoiseSummaryMaker *
   process.egmGsfElectronIDSequence *     
   process.beamSpotMaker *

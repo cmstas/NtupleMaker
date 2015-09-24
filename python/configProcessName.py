@@ -2,3 +2,4 @@
 #For MC, miniAOD ProcessName = "PAT"
 #For data, miniAOD ProcessName = "RECO"
 global name
+global fastSimName
