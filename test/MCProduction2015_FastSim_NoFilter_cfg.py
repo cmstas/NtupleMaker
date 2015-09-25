@@ -74,7 +74,7 @@ process.hypDilepMaker.LooseLepton_PtCut  = cms.double(10.0)
 #Options for Input
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(
-                                'file:/hadoop/cms/phedex/store/mc/RunIISpring15FSPremix/TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/MCRUN2_74_V9-v1/10000/FCB7B942-C75F-E511-8C7A-000F53273714.root',
+                                '/store/mc/RunIISpring15FSPremix/SMS-T1bbbb_mGluino-1000-1025_mLSP-1to975-1000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/MCRUN2_74_V9-v1/10000/0261E2EC-205C-E511-8041-002590D9D84A.root'
                             )
 )
 process.source.noEventSort = cms.untracked.bool( True )
@@ -89,7 +89,7 @@ process.out.outputCommands = cms.untracked.vstring( 'keep *' )
 
 #configurable options =======================================================================
 runOnData=False #data/MC switch
-usePrivateSQlite=True #use external JECs (sqlite file)
+usePrivateSQlite=False #use external JECs (sqlite file)
 useHFCandidates=False #create an additionnal NoHF slimmed MET collection if the option is set to false
 applyResiduals=False #application of residual corrections. Have to be set to True once the 13 TeV residual corrections are available. False to be kept meanwhile. Can be kept to False later for private tests or for analysis checks and developments (not the official recommendation!).
 #===================================================================
