@@ -36,10 +36,17 @@ git clone https://github.com/cmstas/Dictionaries $CMSSW_BASE/src/CMS3/Dictionari
 # # jet tool box     #
 # ####################
 
-git clone https://github.com/cms-jet/JetToolbox $CMSSW_BASE/src/JMEAnalysis/JetToolbox -b jetToolbox_74X
+git clone https://github.com/cms-jet/JetToolbox $CMSSW_BASE/src/JMEAnalysis/JetToolbox -b jetToolbox_74X_PuppiWithGroomers 
 pushd $CMSSW_BASE/src/JMEAnalysis/JetToolbox
-git checkout a80553163684d718e65e44d9b385a4aa11475659
+git checkout 7f0cfaa7192520ee131cdae69feb0083f415e317
 popd
+# ####################
+# #       puppi     #
+# ####################
+
+git cms-addpkg CommonTools/PileupAlgos 
+git cms-merge-topic nhanvtran:puppi-etadep-75X-bugfix
+
 
 mkdir $CMSSW_BASE/bullshit  
 mv $CMSSW_BASE/src/* $CMSSW_BASE/bullshit/

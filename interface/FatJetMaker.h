@@ -1,9 +1,9 @@
 // -*- C++ -*-
 //
-// Package:    CA12SubJetMaker
-// Class:      CA12SubJetMaker
+// Package:    FatJetMaker
+// Class:      FatJetMaker
 // 
-/**\class CA12SubJetMaker SubJetMaker.cc temp/SubJetMaker/src/SubJetMaker.cc
+/**\class FatJetMaker SubJetMaker.cc temp/SubJetMaker/src/SubJetMaker.cc
 
 Description: <one line class summary>
 
@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Puneeth Devanand KALAVASE
 //         Created:  Tue Sep  1 22:18:18 CEST 2009
-// $Id: CA12SubJetMaker.h,v 1.9 2012/05/13 04:22:36 fgolf Exp $
+// $Id: FatJetMaker.h,v 1.9 2012/05/13 04:22:36 fgolf Exp $
 //
 //
 
@@ -37,10 +37,10 @@ Implementation:
 // class decleration
 //
 
-class CA12SubJetMaker : public edm::EDProducer {
+class FatJetMaker : public edm::EDProducer {
 public:
-  explicit CA12SubJetMaker(const edm::ParameterSet&);
-  ~CA12SubJetMaker();
+  explicit FatJetMaker(const edm::ParameterSet&);
+  ~FatJetMaker();
 
 private:
   virtual void beginJob() ;
@@ -49,11 +49,12 @@ private:
       
   // ----------member data ---------------------------
   edm::EDGetTokenT<edm::View<pat::Jet> > pfJetsToken;
-  edm::InputTag pfCandidatesTag_;
-  //edm::EDGetTokenT<pat::Jet> srcJet_;
-  edm::EDGetTokenT<std::vector<pat::Jet>> srcJet_;
+  edm::InputTag pfJetsInputTag_;
   double         pfJetPtCut_;
   std::string aliasprefix_;
+//  std::string subjetprefix_;
+  std::string NjettinessPrefix_;
+  std::string LinksPrefix_;
   std::string PFJetCorrectorL2L3_;
   std::string PFJetCorrectorL1L2L3_;
   std::string PFJetCorrectorL1FastL2L3_;
