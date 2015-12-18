@@ -75,7 +75,7 @@ process.hypDilepMaker.LooseLepton_PtCut  = cms.double(10.0)
 #Options for Input
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(
-                                'file:/hadoop/cms/phedex/store/mc/RunIISpring15MiniAODv2/SMS-T1bbbb_mGluino-1000_mLSP-900_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/74X_mcRun2_asymptotic_v2-v1/80000/68A49080-8674-E511-8DBF-0025905AF57C.root'
+                                'file:/hadoop/cms/phedex/store/mc/RunIISpring15FSPremix/SMS-T5ZZ_mGluino-1000To1250_mLSP-100To1000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/MCRUN2_74_V9-v2/20000/0C017CA4-E18B-E511-B526-02163E015E78.root'
                             )
 )
 process.source.noEventSort = cms.untracked.bool( True )
@@ -98,7 +98,7 @@ applyResiduals=False #application of residual corrections. Have to be set to Tru
 if usePrivateSQlite:
     from CondCore.DBCommon.CondDBSetup_cfi import *
     import os
-    era="Summer15_25nsV2_MC"
+    era="Summer15_25nsV6_MC"
     process.jec = cms.ESSource("PoolDBESSource",CondDBSetup,
                                connect = cms.string( "sqlite_file:"+era+".db" ),
                                toGet =  cms.VPSet(
@@ -197,8 +197,8 @@ process.p = cms.Path(
   process.subJetMaker *
 #  process.ca12subJetMaker *
   process.pfmetMaker *
-  process.T1pfmetMaker *
-  process.T1pfmetNoHFMaker *
+#  process.T1pfmetMaker *
+#  process.T1pfmetNoHFMaker *
   process.hltMakerSequence *
   process.pftauMaker *
   process.photonMaker *
