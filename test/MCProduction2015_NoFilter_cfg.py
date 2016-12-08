@@ -86,14 +86,16 @@ process.source = cms.Source("PoolSource",
                                 # 'file:/hadoop/cms/phedex/store/mc/RunIISpring15MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/74X_mcRun2_asymptotic_v2-v1/60000/7AEAFCAD-266F-E511-8A2A-001E67A3F3DF.root',
                                 # 'root://cmsxrootd.fnal.gov//store/mc/RunIIFall15MiniAODv1/WWTo2L2Nu_13TeV-powheg/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/50000/0E47EC63-7B9D-E511-B714-B083FED426E5.root
                                 # 'file:/hadoop/cms/phedex/store/mc/RunIISpring16MiniAODv1/ttbb_4FS_ckm_amcatnlo_madspin_pythia8/MINIAODSIM/PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/60000/F4EA8D09-9002-E611-9D1B-1CC1DE19274E.root',
-                                '/store/mc/RunIISpring16MiniAODv2/WZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PUSpring16_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/60000/D63C4E53-D91B-E611-AC83-FA163E5810F7.root',
+                                # '/store/mc/RunIISummer16MiniAODv2/TTWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1/110000/F2A00CEF-ABAA-E611-AFB3-001E67DBE881.root',
+                                'file:F2A00CEF-ABAA-E611-AFB3-001E67DBE881.root',
                                 # 'file:RelValProdQCD_Pt_3000_3500_13.root'
                             )
 )
 process.source.noEventSort = cms.untracked.bool( True )
 
 #Max Events
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+# process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1) )
 
 #Branches 
 process.out.outputCommands = cms.untracked.vstring( 'keep *' )
@@ -230,8 +232,8 @@ process.p = cms.Path(
   process.miniAODrhoSequence *
   process.hypDilepMaker
 )
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
+process.MessageLogger.cerr.FwkReport.reportEvery = 1
 process.eventMaker.isData                        = cms.bool(False)
 #process.luminosityMaker.isData                   = process.eventMaker.isData
 
-# process.Timing = cms.Service("Timing")
+process.Timing = cms.Service("Timing")

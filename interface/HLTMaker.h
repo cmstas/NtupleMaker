@@ -21,8 +21,10 @@
 
 // system include files
 #include <algorithm>
+#include <set>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 // user include files
 #include "DataFormats/Common/interface/TriggerResults.h"
@@ -42,6 +44,7 @@
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 #include "FWCore/Common/interface/TriggerNames.h"
+#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
 #include "TRegexp.h"
 #include "TString.h"
@@ -73,12 +76,18 @@ private:
   edm::TriggerNames triggerNames_;
 
   HLTPrescaleProvider hltConfig_;
+
+  HLTConfigProvider hltConfigProvider_;
   
   std::string processName_;
   bool fillTriggerObjects_;
   std::vector<std::string> prunedTriggerNames_;
   TString processNamePrefix_;
   std::string aliasprefix_;
+
+  bool makeFilterMap;
+  std::vector<std::string> totalFilterList;
+  std::unordered_map<std::string,int> totalFilterMap;
 };
 
 #endif

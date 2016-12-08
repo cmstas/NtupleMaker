@@ -43,6 +43,7 @@ hltConfig_(iConfig, consumesCollector(), *this) {
 
   produces<TBits>                           (Form("%sbits"        ,processNamePrefix_.Data())).setBranchAlias(Form("%s_bits"       ,processNamePrefix_.Data()));
   produces<vector<TString> >                (Form("%strigNames"   ,processNamePrefix_.Data())).setBranchAlias(Form("%s_trigNames"  ,processNamePrefix_.Data()));
+  produces<vector<TString> >                (Form("%sfiltNames"   ,processNamePrefix_.Data())).setBranchAlias(Form("%s_filtNames"  ,processNamePrefix_.Data()));
   produces<vector<unsigned int> >           (Form("%sprescales"   ,processNamePrefix_.Data())).setBranchAlias(Form("%s_prescales"  ,processNamePrefix_.Data()));
   produces<vector<unsigned int> >           (Form("%sl1prescales" ,processNamePrefix_.Data())).setBranchAlias(Form("%s_l1prescales",processNamePrefix_.Data()));
   produces<vector<vector<int> > >           (Form("%strigObjsid"  ,processNamePrefix_.Data())).setBranchAlias(Form("%s_trigObjs_id",processNamePrefix_.Data()));
@@ -50,6 +51,7 @@ hltConfig_(iConfig, consumesCollector(), *this) {
   produces<vector<vector<LorentzVector> > > (Form("%strigObjsp4"  ,processNamePrefix_.Data())).setBranchAlias(Form("%s_trigObjs_p4",processNamePrefix_.Data()));
   produces<vector<vector<bool> > >          (Form("%strigObjspassLast"  ,processNamePrefix_.Data())).setBranchAlias(Form("%s_trigObjs_passLast",processNamePrefix_.Data()));
   produces<vector<vector<TString> > >       (Form("%strigObjsfilters"  ,processNamePrefix_.Data())).setBranchAlias(Form("%s_trigObjs_filters",processNamePrefix_.Data()));
+  produces<vector<vector<vector<int> > > >       (Form("%strigObjsfilterIndices"  ,processNamePrefix_.Data())).setBranchAlias(Form("%s_trigObjs_filterIndices",processNamePrefix_.Data()));
   
   // isData_ = iConfig.getParameter<bool>("isData");
   
@@ -68,10 +70,14 @@ void HLTMaker::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup){
   if (processName_ != "") {
 	bool changed(true);
 	// if (hltConfig_.init(iRun,iSetup,"*",changed)) {
+        hltConfigProvider_.init(iRun, iSetup, processName_,changed);
 	if (hltConfig_.init(iRun,iSetup,processName_,changed)) {
-	} 
+	}
     else throw cms::Exception("HLTMaker::beginRun: config extraction failure with process name " + processName_);
   }
+
+  // flag to force recreation of list/map of filters for all triggers
+  makeFilterMap = true;
 }
 
 void HLTMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
@@ -133,7 +139,7 @@ void HLTMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
 
 //  // sanity check
 //  assert(triggerResultsH_->size()==hltConfig_.size());
-
+ 
   auto_ptr<vector<unsigned int> > prescales   (new vector<unsigned int>);
   auto_ptr<vector<unsigned int> > l1prescales (new vector<unsigned int>);
 
@@ -142,20 +148,46 @@ void HLTMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
 
   auto_ptr<TBits>                           bits      (new TBits(nTriggers));
   auto_ptr<vector<TString> >                trigNames (new vector<TString>);
+  auto_ptr<vector<TString> >                filtNames (new vector<TString>);
   auto_ptr<vector<vector<int> > >           trigObjsid(new vector<vector<int> >);
   auto_ptr<vector<vector<LorentzVector> > > trigObjsp4(new vector<vector<LorentzVector> >);
   auto_ptr<vector<vector<bool> > >          trigObjspassLast(new vector<vector<bool> >);
-  auto_ptr<vector<vector<TString> > >       trigObjsfilters(new vector<vector<TString> >);
+  auto_ptr<vector<vector<vector<int> > > >       trigObjsfilterIndices(new vector<vector<vector<int> > >);
   trigNames ->reserve(nTriggers);
   trigObjsid->reserve(nTriggers);
   trigObjsp4->reserve(nTriggers);
   trigObjspassLast->reserve(nTriggers);
-  trigObjsfilters->reserve(nTriggers);
+  trigObjsfilterIndices->reserve(nTriggers);
 
   std::vector<bool> doFillTrigger; // map trigger index to decision to fill triggerobjects for it
 
-  for(unsigned int i = 0; i < nTriggers; ++i){
+  if (makeFilterMap) {
+      for (unsigned int i = 0; i < nTriggers; ++i){
+          const std::vector<std::string>& tagsModules = hltConfigProvider_.saveTagsModules(i);
+          for (unsigned int idx = 0; idx < tagsModules.size(); idx++) {
+              std::string filtname = tagsModules[idx];
+              // Sometimes the filtername is preceded by a "-". Not sure why, but remove it if so
+              if (filtname[0] == '-') filtname = filtname.substr(1);
+              totalFilterList.push_back(filtname);
+          }
+      }
 
+      // Sort and remove duplicates
+      std::sort(totalFilterList.begin(), totalFilterList.end());
+      std::set<std::string> s;
+      for (unsigned int i = 0; i < totalFilterList.size(); ++i) s.insert(totalFilterList[i]);
+      totalFilterList.assign(s.begin(), s.end());
+
+      for (unsigned int i = 0; i < totalFilterList.size(); ++i) 
+          totalFilterMap[totalFilterList[i]] = i;
+
+      makeFilterMap = false;
+  }
+  
+  filtNames ->reserve(totalFilterList.size());
+  for (unsigned int i = 0; i < totalFilterList.size(); ++i) filtNames->push_back(totalFilterList[i]);
+
+  for(unsigned int i = 0; i < nTriggers; ++i){
 
       // What is your name?
       const string& name = triggerNames_.triggerName(i);
@@ -204,7 +236,7 @@ void HLTMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
     trigObjsid->push_back(vector<int>());
     trigObjsp4->push_back(vector<LorentzVector>());
     trigObjspassLast->push_back(vector<bool>());
-    trigObjsfilters->push_back(vector<TString>());
+    trigObjsfilterIndices->push_back(vector<vector<int> >());
   }
 
   pat::TriggerObjectStandAlone TO;
@@ -231,6 +263,7 @@ void HLTMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
 
         bool saveFilters = false;
         TString filterslist = "";
+        std::vector<int> filter_indices;
         if ( IDs.size() > 0 ) {
           int id = abs(IDs[0]);
           // From: TriggerTypeDefs.h
@@ -252,6 +285,26 @@ void HLTMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
           for (uint j  = 0; j < filter_labels.size(); j++) {
             filterslist += filter_labels[j];
             filterslist += " ";
+
+            // NOTE: are we at the point where it's faster to use O(1) maps rather than O(N) find? The total size is around 2-3k filter names.
+            // In principle, should never be -1 if all filter names have been found
+
+            // // slow
+            // int idx = std::find(totalFilterList.begin(),totalFilterList.end(),filter_labels[j])-totalFilterList.begin();
+            // if (idx == (int)totalFilterList.size()) idx = -1;
+
+            // // faster
+            // auto lower = std::lower_bound(totalFilterList.begin(), totalFilterList.end(), filter_labels[j]);
+            // int idx = lower - totalFilterList.begin();
+            // if (lower == totalFilterList.end() || *lower != filter_labels[j]) idx = -1;
+
+            // faster
+            int idx = -1;
+            auto t = totalFilterMap.find(filter_labels[j]);
+            if (t != totalFilterMap.end()) idx = t->second;
+
+            filter_indices.push_back(idx);
+
           }
         }
 
@@ -259,7 +312,7 @@ void HLTMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
         trigObjsid->at(itrig).push_back(storeID);
         trigObjsp4->at(itrig).push_back(LorentzVector(TO.p4()));
         trigObjspassLast->at(itrig).push_back(TO.hasPathName(name, true));
-        trigObjsfilters->at(itrig).push_back(filterslist);
+        trigObjsfilterIndices->at(itrig).push_back(filter_indices);
       } // hasPathName
 
     } // End of loop over triggers
@@ -273,10 +326,11 @@ void HLTMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   iEvent.put(prescales  , Form("%sprescales"   , processNamePrefix_.Data() ) );
   iEvent.put(l1prescales, Form("%sl1prescales" , processNamePrefix_.Data() ) );
   iEvent.put(trigNames  , Form("%strigNames"   , processNamePrefix_.Data() ) );
+  iEvent.put(filtNames  , Form("%sfiltNames"   , processNamePrefix_.Data() ) );
   iEvent.put(trigObjsid , Form("%strigObjsid"  , processNamePrefix_.Data() ) );
   iEvent.put(trigObjsp4 , Form("%strigObjsp4"  , processNamePrefix_.Data() ) );
   iEvent.put(trigObjspassLast , Form("%strigObjspassLast"  , processNamePrefix_.Data() ) );
-  iEvent.put(trigObjsfilters , Form("%strigObjsfilters"  , processNamePrefix_.Data() ) );
+  iEvent.put(trigObjsfilterIndices , Form("%strigObjsfilterIndices"  , processNamePrefix_.Data() ) );
 }
 
 bool HLTMaker::doPruneTriggerName(const string& name) const
