@@ -19,22 +19,26 @@ SubJetMaker::SubJetMaker(const edm::ParameterSet& iConfig){
   using namespace std;
   using namespace edm;
 
+  // initialize the FatJetNN class in the constructor
+  auto cc = consumesCollector();
+  fatjetNN_ = new deepntuples::FatJetNN(iConfig, cc);
+  // load json for input variable transformation
+  fatjetNN_->load_json("preprocessing.json"); // use the full path or put the file in the current working directory (i.e., where you run cmsRun)
+  // load DNN model and parameter files
+  fatjetNN_->load_model("resnet-symbol.json", "resnet.params"); // use the full path or put the file in the current working directory (i.e., where you run cmsRun)
+
+
   // product of this EDProducer
   produces<vector<LorentzVector> > ( "ak8jetsp4"                               ).setBranchAlias( "ak8jets_p4"                        );
   produces<vector<float> >         ( "ak8jetsmass"                             ).setBranchAlias( "ak8jets_mass"                      );
   produces<vector<float> >         ( "ak8jetsundoJEC"                          ).setBranchAlias( "ak8jets_undoJEC"                   );
-  produces<vector<int>  > ( "ak8jetsnpfcands"                   ).setBranchAlias( aliasprefix_+"_npfcands"                   );
+  produces<vector<int>  >          ( "ak8jetsnpfcands"                         ).setBranchAlias( "ak8jets_npfcands"                  );
   produces<vector<float> >         ( "ak8jetsarea"                             ).setBranchAlias( "ak8jets_area"                      );
   produces<vector<int> >           ( "ak8jetspartonFlavour"                    ).setBranchAlias( "ak8jets_partonFlavour"             );
   produces<vector<float> >         ( "ak8jetsnJettinessTau1"                   ).setBranchAlias( "ak8jets_nJettinessTau1"            );
   produces<vector<float> >         ( "ak8jetsnJettinessTau2"                   ).setBranchAlias( "ak8jets_nJettinessTau2"            );
   produces<vector<float> >         ( "ak8jetsnJettinessTau3"                   ).setBranchAlias( "ak8jets_nJettinessTau3"            );
-  // produces<vector<float> >         ( "ak8jetstopMass"                          ).setBranchAlias( "ak8jets_topMass"                   );
-  // produces<vector<float> >         ( "ak8jetsminMass"                          ).setBranchAlias( "ak8jets_minMass"                   );
-  // produces<vector<int> >           ( "ak8jetsnSubJets"                         ).setBranchAlias( "ak8jets_nSubJets"                  );
   produces<vector<float> >         ( "ak8jetsprunedMass"                       ).setBranchAlias( "ak8jets_prunedMass"                );
-  // produces<vector<float> >         ( "ak8jetstrimmedMass"                      ).setBranchAlias( "ak8jets_trimmedMass"               );
-  // produces<vector<float> >         ( "ak8jetsfilteredMass"                     ).setBranchAlias( "ak8jets_filteredMass"              );
   produces<vector<float> >         ( "ak8jetssoftdropMass"                     ).setBranchAlias( "ak8jets_softdropMass"              );
   produces<vector<float> >         ( "ak8jetspuppinJettinessTau1"              ).setBranchAlias( "ak8jets_puppi_nJettinessTau1"      );
   produces<vector<float> >         ( "ak8jetspuppinJettinessTau2"              ).setBranchAlias( "ak8jets_puppi_nJettinessTau2"      );
@@ -43,9 +47,24 @@ SubJetMaker::SubJetMaker(const edm::ParameterSet& iConfig){
   produces<vector<float> >         ( "ak8jetspuppimass"                        ).setBranchAlias( "ak8jets_puppi_mass"                );
   produces<vector<float> >         ( "ak8jetspuppieta"                         ).setBranchAlias( "ak8jets_puppi_eta"                 );
   produces<vector<float> >         ( "ak8jetspuppiphi"                         ).setBranchAlias( "ak8jets_puppi_phi"                 );
-  produces<vector<LorentzVector> >         ( "ak8jetssoftdropPuppiSubjet1"             ).setBranchAlias( "ak8jets_softdropPuppiSubjet1"      );
-  produces<vector<LorentzVector> >         ( "ak8jetssoftdropPuppiSubjet2"             ).setBranchAlias( "ak8jets_softdropPuppiSubjet2"      );
+  produces<vector<LorentzVector> > ( "ak8jetssoftdropPuppiSubjet1"             ).setBranchAlias( "ak8jets_softdropPuppiSubjet1"      );
+  produces<vector<LorentzVector> > ( "ak8jetssoftdropPuppiSubjet2"             ).setBranchAlias( "ak8jets_softdropPuppiSubjet2"      );
   produces<vector<float> >         ( "ak8jetspuppisoftdropMass"                ).setBranchAlias( "ak8jets_puppi_softdropMass"        );
+
+  // deepAK8 tagging branches
+  produces<vector<float> >         ( "ak8jetsdeepbindisctop"                   ).setBranchAlias( "ak8jets_deep_bindisc_top"          );
+  produces<vector<float> >         ( "ak8jetsdeepbindiscw"                     ).setBranchAlias( "ak8jets_deep_bindisc_w"            );
+  produces<vector<float> >         ( "ak8jetsdeepbindiscz"                     ).setBranchAlias( "ak8jets_deep_bindisc_z"            );
+  produces<vector<float> >         ( "ak8jetsdeepbindisczbb"                   ).setBranchAlias( "ak8jets_deep_bindisc_zbb"          );
+  produces<vector<float> >         ( "ak8jetsdeepbindischbb"                   ).setBranchAlias( "ak8jets_deep_bindisc_hbb"          );
+  produces<vector<float> >         ( "ak8jetsdeepbindisch4q"                   ).setBranchAlias( "ak8jets_deep_bindisc_h4q"          );
+  produces<vector<float> >         ( "ak8jetsdeeprawdiscqcd"                   ).setBranchAlias( "ak8jets_deep_rawdisc_qcd"          );
+  produces<vector<float> >         ( "ak8jetsdeeprawdisctop"                   ).setBranchAlias( "ak8jets_deep_rawdisc_top"          );
+  produces<vector<float> >         ( "ak8jetsdeeprawdiscw"                     ).setBranchAlias( "ak8jets_deep_rawdisc_w"            );
+  produces<vector<float> >         ( "ak8jetsdeeprawdiscz"                     ).setBranchAlias( "ak8jets_deep_rawdisc_z"            );
+  produces<vector<float> >         ( "ak8jetsdeeprawdisczbb"                   ).setBranchAlias( "ak8jets_deep_rawdisc_zbb"          );
+  produces<vector<float> >         ( "ak8jetsdeeprawdischbb"                   ).setBranchAlias( "ak8jets_deep_rawdisc_hbb"          );
+  produces<vector<float> >         ( "ak8jetsdeeprawdisch4q"                   ).setBranchAlias( "ak8jets_deep_rawdisc_h4q"          );
 
   pfJetsToken = consumes<edm::View<pat::Jet> >(iConfig.getParameter<edm::InputTag>("pfJetsInputTag"));
   pfJetPtCut_                       = iConfig.getParameter<double>     ( "pfJetPtCut"                       );
@@ -71,18 +90,13 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   unique_ptr<vector<LorentzVector> > pfjets_p4                        (new vector<LorentzVector>  );
   unique_ptr<vector<float> >         pfjets_mass                      (new vector<float>          );
   unique_ptr<vector<float> >         pfjets_undoJEC                   (new vector<float>          );
-  unique_ptr<vector<int>  > pfjets_npfcands            (new vector<int>   );
+  unique_ptr<vector<int>  >          pfjets_npfcands                  (new vector<int>            );
   unique_ptr<vector<float> >         pfjets_area                      (new vector<float>          );  
   unique_ptr<vector<int> >           pfjets_partonFlavour             (new vector<int>            );  
   unique_ptr<vector<float> >         ak8jets_nJettinessTau1           (new vector<float>          );  
   unique_ptr<vector<float> >         ak8jets_nJettinessTau2           (new vector<float>          );  
   unique_ptr<vector<float> >         ak8jets_nJettinessTau3           (new vector<float>          );  
-  // unique_ptr<vector<float> >         ak8jets_topMass                  (new vector<float>          );  
-  // unique_ptr<vector<float> >         ak8jets_minMass                  (new vector<float>          );  
-  // unique_ptr<vector<int> >           ak8jets_nSubJets                 (new vector<int>            );  
   unique_ptr<vector<float> >         ak8jets_prunedMass               (new vector<float>          );  
-  // unique_ptr<vector<float> >         ak8jets_trimmedMass              (new vector<float>          );  
-  // unique_ptr<vector<float> >         ak8jets_filteredMass             (new vector<float>          );  
   unique_ptr<vector<float> >         ak8jets_softdropMass             (new vector<float>          );  
   unique_ptr<vector<float> >         ak8jets_puppi_nJettinessTau1     (new vector<float>          );  
   unique_ptr<vector<float> >         ak8jets_puppi_nJettinessTau2     (new vector<float>          );  
@@ -93,21 +107,58 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   unique_ptr<vector<float> >         ak8jets_puppi_phi                (new vector<float>          );  
   unique_ptr<vector<LorentzVector> > ak8jets_softdropPuppiSubjet1     (new vector<LorentzVector>  );
   unique_ptr<vector<LorentzVector> > ak8jets_softdropPuppiSubjet2     (new vector<LorentzVector>  );
-  unique_ptr<vector<float> > ak8jets_puppi_softdropMass               (new vector<float>          );
+  unique_ptr<vector<float> >         ak8jets_puppi_softdropMass       (new vector<float>          );
+
+  unique_ptr<vector<float> > ak8jets_deep_bindisc_top (new vector<float>);
+  unique_ptr<vector<float> > ak8jets_deep_bindisc_w   (new vector<float>);
+  unique_ptr<vector<float> > ak8jets_deep_bindisc_z   (new vector<float>);
+  unique_ptr<vector<float> > ak8jets_deep_bindisc_zbb (new vector<float>);
+  unique_ptr<vector<float> > ak8jets_deep_bindisc_hbb (new vector<float>);
+  unique_ptr<vector<float> > ak8jets_deep_bindisc_h4q (new vector<float>);
+  unique_ptr<vector<float> > ak8jets_deep_rawdisc_qcd (new vector<float>);
+  unique_ptr<vector<float> > ak8jets_deep_rawdisc_top (new vector<float>);
+  unique_ptr<vector<float> > ak8jets_deep_rawdisc_w   (new vector<float>);
+  unique_ptr<vector<float> > ak8jets_deep_rawdisc_z   (new vector<float>);
+  unique_ptr<vector<float> > ak8jets_deep_rawdisc_zbb (new vector<float>);
+  unique_ptr<vector<float> > ak8jets_deep_rawdisc_hbb (new vector<float>);
+  unique_ptr<vector<float> > ak8jets_deep_rawdisc_h4q (new vector<float>);
 
   Handle<View<pat::Jet> > pfJetsHandle;
   iEvent.getByToken(pfJetsToken, pfJetsHandle);
 
+  fatjetNN_->readEvent(iEvent, iSetup);
+
   for(View<pat::Jet>::const_iterator pfjet_it = pfJetsHandle->begin(); pfjet_it != pfJetsHandle->end(); pfjet_it++){
 
-    // jets from toolbox are uncorrected, so we need to correct them here
-    pfjets_p4                        ->push_back( LorentzVector( pfjet_it->p4() ) * pfjet_it->jecFactor("Uncorrected")     );
-    pfjets_mass                      ->push_back( pfjet_it->mass()                     );
+    auto p4 = LorentzVector( pfjet_it->p4() );
 
-    // jets from toolbox are uncorrected, so we need to correct them here => flip undoJEC
-    pfjets_undoJEC                   ->push_back( 1.0 / pfjet_it->jecFactor("Uncorrected")   );
-    pfjets_area                      ->push_back(pfjet_it->jetArea()                   );
-    pfjets_partonFlavour             ->push_back(pfjet_it->partonFlavour()             );
+    // 17Nov2017 rereco had ak8jets down to 50GeV. The 2017 miniAOD twiki states only jets down to 170 will be stored
+    // so putting a temporary speed optimization here. When the miniAOD pt cut gets fixed, this line will do nothing
+    // and get removed.
+    if (p4.pt() < pfJetPtCut_) continue;
+
+    pfjets_p4                        ->push_back( p4     );
+    pfjets_mass                      ->push_back( pfjet_it->mass()                     );
+    pfjets_undoJEC                   ->push_back( pfjet_it->jecFactor("Uncorrected")   );
+    pfjets_area                      ->push_back( pfjet_it->jetArea()                  );
+    pfjets_partonFlavour             ->push_back( pfjet_it->partonFlavour()            );
+
+    fatjetNN_->predict(*pfjet_it);
+
+    ak8jets_deep_bindisc_top ->push_back( fatjetNN_->get_binarized_score_top() );
+    ak8jets_deep_bindisc_w   ->push_back( fatjetNN_->get_binarized_score_w()   );
+    ak8jets_deep_bindisc_z   ->push_back( fatjetNN_->get_binarized_score_z()   );
+    ak8jets_deep_bindisc_zbb ->push_back( fatjetNN_->get_binarized_score_zbb() );
+    ak8jets_deep_bindisc_hbb ->push_back( fatjetNN_->get_binarized_score_hbb() );
+    ak8jets_deep_bindisc_h4q ->push_back( fatjetNN_->get_binarized_score_h4q() );
+
+    ak8jets_deep_rawdisc_qcd ->push_back( fatjetNN_->get_raw_score_qcd()       );
+    ak8jets_deep_rawdisc_top ->push_back( fatjetNN_->get_raw_score_top()       );
+    ak8jets_deep_rawdisc_w   ->push_back( fatjetNN_->get_raw_score_w()         );
+    ak8jets_deep_rawdisc_z   ->push_back( fatjetNN_->get_raw_score_z()         );
+    ak8jets_deep_rawdisc_zbb ->push_back( fatjetNN_->get_raw_score_zbb()       );
+    ak8jets_deep_rawdisc_hbb ->push_back( fatjetNN_->get_raw_score_hbb()       );
+    ak8jets_deep_rawdisc_h4q ->push_back( fatjetNN_->get_raw_score_h4q()       );
 
     float nJettinessTau1 = -999, nJettinessTau2 = -999, nJettinessTau3 = -999;
     // float topMass = -999, minMass = -999, nSubJets = -999;
@@ -188,18 +239,13 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   iEvent.put(std::move(pfjets_p4                        ), "ak8jetsp4"                        );
   iEvent.put(std::move(pfjets_mass                      ), "ak8jetsmass"                      );
   iEvent.put(std::move(pfjets_undoJEC                   ), "ak8jetsundoJEC"                   );
-  iEvent.put(std::move(pfjets_npfcands            ), "ak8jetsnpfcands"            );
+  iEvent.put(std::move(pfjets_npfcands                  ), "ak8jetsnpfcands"                  );
   iEvent.put(std::move(pfjets_area                      ), "ak8jetsarea"                      );
   iEvent.put(std::move(pfjets_partonFlavour             ), "ak8jetspartonFlavour"             );
   iEvent.put(std::move(ak8jets_nJettinessTau1           ), "ak8jetsnJettinessTau1"            );
   iEvent.put(std::move(ak8jets_nJettinessTau2           ), "ak8jetsnJettinessTau2"            );
   iEvent.put(std::move(ak8jets_nJettinessTau3           ), "ak8jetsnJettinessTau3"            );
-  // iEvent.put(std::move(ak8jets_topMass                  ), "ak8jetstopMass"               );
-  // iEvent.put(std::move(ak8jets_minMass                  ), "ak8jetsminMass"               );
-  // iEvent.put(std::move(ak8jets_nSubJets                 ), "ak8jetsnSubJets"              );
   iEvent.put(std::move(ak8jets_prunedMass               ), "ak8jetsprunedMass"            );
-  // iEvent.put(std::move(ak8jets_trimmedMass              ), "ak8jetstrimmedMass"           );
-  // iEvent.put(std::move(ak8jets_filteredMass             ), "ak8jetsfilteredMass"          );
   iEvent.put(std::move(ak8jets_softdropMass             ), "ak8jetssoftdropMass"          );
   iEvent.put(std::move(ak8jets_puppi_nJettinessTau1     ), "ak8jetspuppinJettinessTau1"   );
   iEvent.put(std::move(ak8jets_puppi_nJettinessTau2     ), "ak8jetspuppinJettinessTau2"   );
@@ -211,6 +257,20 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   iEvent.put(std::move(ak8jets_softdropPuppiSubjet1     ), "ak8jetssoftdropPuppiSubjet1"  );
   iEvent.put(std::move(ak8jets_softdropPuppiSubjet2     ), "ak8jetssoftdropPuppiSubjet2"  );
   iEvent.put(std::move(ak8jets_puppi_softdropMass       ), "ak8jetspuppisoftdropMass"     );
+
+  iEvent.put(std::move(ak8jets_deep_bindisc_top         ), "ak8jetsdeepbindisctop"        );
+  iEvent.put(std::move(ak8jets_deep_bindisc_w           ), "ak8jetsdeepbindiscw"          );
+  iEvent.put(std::move(ak8jets_deep_bindisc_z           ), "ak8jetsdeepbindiscz"          );
+  iEvent.put(std::move(ak8jets_deep_bindisc_zbb         ), "ak8jetsdeepbindisczbb"        );
+  iEvent.put(std::move(ak8jets_deep_bindisc_hbb         ), "ak8jetsdeepbindischbb"        );
+  iEvent.put(std::move(ak8jets_deep_bindisc_h4q         ), "ak8jetsdeepbindisch4q"        );
+  iEvent.put(std::move(ak8jets_deep_rawdisc_qcd         ), "ak8jetsdeeprawdiscqcd"        );
+  iEvent.put(std::move(ak8jets_deep_rawdisc_top         ), "ak8jetsdeeprawdisctop"        );
+  iEvent.put(std::move(ak8jets_deep_rawdisc_w           ), "ak8jetsdeeprawdiscw"          );
+  iEvent.put(std::move(ak8jets_deep_rawdisc_z           ), "ak8jetsdeeprawdiscz"          );
+  iEvent.put(std::move(ak8jets_deep_rawdisc_zbb         ), "ak8jetsdeeprawdisczbb"        );
+  iEvent.put(std::move(ak8jets_deep_rawdisc_hbb         ), "ak8jetsdeeprawdischbb"        );
+  iEvent.put(std::move(ak8jets_deep_rawdisc_h4q         ), "ak8jetsdeeprawdisch4q"        );
 
 }
 

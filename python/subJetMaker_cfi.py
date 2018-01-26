@@ -24,7 +24,7 @@ subJetMaker = cms.EDProducer("SubJetMaker",
   # pfJetsInputTag                   = cms.InputTag("ak8PFJetsCHS"),
   #pfCandidatesTag                  = cms.InputTag("particleFlow"),
   pfCandidatesTag                  = cms.InputTag("packedPFCandidates"),
-  pfJetPtCut                       = cms.double(5.),
+  pfJetPtCut                       = cms.double(170),
 
   # PFJetCorrectorL2L3               = cms.string("ak5PFCHSL2L3"),
   # PFJetCorrectorL1L2L3             = cms.string("ak5PFCHSL1L2L3"),
