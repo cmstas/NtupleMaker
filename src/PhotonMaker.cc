@@ -87,6 +87,8 @@ PhotonMaker::PhotonMaker(const edm::ParameterSet& iConfig) {
     produces<vector<float> > ( branchprefix + "ecalPFClusterIso"       ).setBranchAlias( aliasprefix_ + "_ecalPFClusterIso");
     produces<vector<float> > ( branchprefix + "hcalPFClusterIso"       ).setBranchAlias( aliasprefix_ + "_hcalPFClusterIso");
 
+    produces<vector<int> > (branchprefix + "hasGainSwitchFlag").setBranchAlias(aliasprefix_ + "_hasGainSwitchFlag");
+
 
     photonsToken = consumes<edm::View<pat::Photon> >(iConfig.getParameter<edm::InputTag>("photonsInputTag"));
     minEt_                    = iConfig.getParameter<double>("minEt");
@@ -131,6 +133,7 @@ void PhotonMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     unique_ptr<vector<float> > photons_ntkIsoHollow03 ( new vector<float> );
     unique_ptr<vector<float> > photons_ecalPFClusterIso       ( new vector<float> );
     unique_ptr<vector<float> > photons_hcalPFClusterIso       ( new vector<float> );
+    unique_ptr<vector<int> > photons_hasGainSwitchFlag          (new vector<int >);
  
     ///////////////////// 
     // Get the photons //
@@ -182,6 +185,8 @@ void PhotonMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 	photons_ntkIsoHollow03     ->push_back(	photon->nTrkHollowConeDR03()	  );
 	photons_ecalPFClusterIso       ->push_back( photon->ecalPFClusterIso()             );
 	photons_hcalPFClusterIso       ->push_back( photon->hcalPFClusterIso()             );
+    photons_hasGainSwitchFlag ->push_back(   photon->hasUserInt("hasGainSwitchFlag") ? photon->userInt("hasGainSwitchFlag") : 0 );
+
 
 	// Loop over PF candidates and find those associated by the map to the gedGsfElectron1
 	vector<int> v_PFCand_idx;
@@ -222,6 +227,8 @@ void PhotonMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     iEvent.put(std::move( photons_ntkIsoHollow03 ), branchprefix+"ntkIsoHollow03"  );
     iEvent.put(std::move( photons_ecalPFClusterIso  ), branchprefix+"ecalPFClusterIso"    );
     iEvent.put(std::move( photons_hcalPFClusterIso  ), branchprefix+"hcalPFClusterIso"    );
+
+   iEvent.put(std::move( photons_hasGainSwitchFlag ), branchprefix + "hasGainSwitchFlag");
 }
 
 //define this as a plug-in

@@ -7,3 +7,11 @@ photonMaker = cms.EDProducer("PhotonMaker",
                              photonsInputTag = cms.InputTag("slimmedPhotons"),
                              )
 
+
+photonBeforeGSFixMaker = photonMaker.clone()
+photonBeforeGSFixMaker.aliasPrefix = cms.untracked.string("photonsBeforeGSFix")
+photonBeforeGSFixMaker.electronsInputTag   = cms.InputTag("slimmedPhotonsBeforeGSFix")
+photonBeforeGSFixMaker.useVID   = cms.bool(False)
+photonBeforeGSFixMaker.ebReducedRecHitCollectionTag = cms.InputTag("reducedEgammaBeforeGSFix:reducedEBRecHits")
+photonBeforeGSFixMaker.eeReducedRecHitCollectionTag = cms.InputTag("reducedEgammaBeforeGSFix:reducedEERecHits")
+photonBeforeGSFixMaker.esReducedRecHitCollectionTag = cms.InputTag("reducedEgammaBeforeGSFix:reducedESRecHits")

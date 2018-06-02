@@ -51,6 +51,24 @@ rmdir $CMSSW_BASE/bullshit
 # fi
 
 ######################
+## # MET stuff # ###
+######################
+# For reminiaod
+# https://twiki.cern.ch/twiki/bin/view/CMSPublic/ReMiniAOD03Feb2017Notes
+pushd $CMSSW_BASE/src
+git cms-merge-topic cms-met:METRecipe_8020 -u
+scram b -j 20
+popd
+### END of MET stuff ###
+
+
+
+pushd $CMSSW_BASE/src
+git cms-merge-topic cms-met:METRecipe_80X_part2 -u
+scram b -j 20
+popd
+
+######################
 ## # DeepFlavour # ###
 ######################
 #  Btagging DeepFlavour recipe for 80X (from https://twiki.cern.ch/twiki/bin/viewauth/CMS/DeepFlavour)
