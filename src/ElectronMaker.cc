@@ -1118,7 +1118,7 @@ void ElectronMaker::produce(Event& iEvent, const EventSetup& iSetup) {
 
     // Put the results into the event
     //
-    iEvent.put(evt_nels, "evtn"+branchprefix);
+    iEvent.put(std::move(evt_nels), "evtn"+branchprefix);
 
     // Predefined ID descisions 
     //
