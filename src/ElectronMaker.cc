@@ -182,24 +182,26 @@ ElectronMaker::ElectronMaker(const ParameterSet& iConfig) {
     // predefined ID decisions
     // http://cmslxr.fnal.gov/lxr/source/DataFormats/EgammaCandidates/interface/GsfElectron.h
 
+    if (useVID_) {
     // Spring 15 predefined ID decisions
     // produces<vector<int> >       ("passVetoId"                 ).setBranchAlias("els_passVetoId"                 );
     // produces<vector<int> >       ("passLooseId"                ).setBranchAlias("els_passLooseId"                );
     // produces<vector<int> >       ("passMediumId"               ).setBranchAlias("els_passMediumId"               );
     // produces<vector<int> >       ("passTightId"                ).setBranchAlias("els_passTightId"                );
     // produces<vector<int> >       ("passHEEPId"                 ).setBranchAlias("els_passHEEPId"                 );
-    produces<vector<int> >       (branchprefix+"sVIDNonTrigMvaWP80Id"    ).setBranchAlias(aliasprefix_+"_passVIDNonTrigMvaWP80Id"    );
-    produces<vector<int> >       (branchprefix+"sVIDNonTrigMvaWP90Id"    ).setBranchAlias(aliasprefix_+"_passVIDNonTrigMvaWP90Id"    );
-    produces<vector<int> >       (branchprefix+"sVIDTrigMvaWP80Id"       ).setBranchAlias(aliasprefix_+"_passVIDTrigMvaWP80Id"       );
-    produces<vector<int> >       (branchprefix+"sVIDTrigMvaWP90Id"       ).setBranchAlias(aliasprefix_+"_passVIDTrigMvaWP90Id"       );
-    produces<vector<float> >     (branchprefix+"NonTrigMvaValue"         ).setBranchAlias(aliasprefix_+"_VIDNonTrigMvaValue"         );
-    produces<vector<float> >     (branchprefix+"TrigMvaValue"            ).setBranchAlias(aliasprefix_+"_VIDTrigMvaValue"            );
-    produces<vector<int> >       (branchprefix+"NonTrigMvaCat"           ).setBranchAlias(aliasprefix_+"_VIDNonTrigMvaCat"           );
-    produces<vector<int> >       (branchprefix+"TrigMvaCat"              ).setBranchAlias(aliasprefix_+"_VIDTrigMvaCat"              );
-    produces<vector<float> >     (branchprefix+"Spring16GPMvaValue"      ).setBranchAlias(aliasprefix_+"_VIDSpring16GPMvaValue"         );
-    produces<vector<int> >       (branchprefix+"Spring16GPMvaCat"        ).setBranchAlias(aliasprefix_+"_VIDSpring16GPMvaCat"           );
-    produces<vector<float> >     (branchprefix+"Spring16HZZMvaValue"     ).setBranchAlias(aliasprefix_+"_VIDSpring16HZZMvaValue"         );
-    produces<vector<int> >       (branchprefix+"Spring16HZZMvaCat"       ).setBranchAlias(aliasprefix_+"_VIDSpring16HZZMvaCat"           );
+    produces<vector<int> >       (branchprefix+"passVIDNonTrigMvaWP80Id"    ).setBranchAlias(aliasprefix_+"_passVIDNonTrigMvaWP80Id"    );
+    produces<vector<int> >       (branchprefix+"passVIDNonTrigMvaWP90Id"    ).setBranchAlias(aliasprefix_+"_passVIDNonTrigMvaWP90Id"    );
+    produces<vector<int> >       (branchprefix+"passVIDTrigMvaWP80Id"       ).setBranchAlias(aliasprefix_+"_passVIDTrigMvaWP80Id"       );
+    produces<vector<int> >       (branchprefix+"passVIDTrigMvaWP90Id"       ).setBranchAlias(aliasprefix_+"_passVIDTrigMvaWP90Id"       );
+    produces<vector<float> >     (branchprefix+"VIDNonTrigMvaValue"         ).setBranchAlias(aliasprefix_+"_VIDNonTrigMvaValue"         );
+    produces<vector<float> >     (branchprefix+"VIDTrigMvaValue"            ).setBranchAlias(aliasprefix_+"_VIDTrigMvaValue"            );
+    produces<vector<int> >       (branchprefix+"VIDNonTrigMvaCat"           ).setBranchAlias(aliasprefix_+"_VIDNonTrigMvaCat"           );
+    produces<vector<int> >       (branchprefix+"VIDTrigMvaCat"              ).setBranchAlias(aliasprefix_+"_VIDTrigMvaCat"              );
+    produces<vector<float> >     (branchprefix+"VIDSpring16GPMvaValue"      ).setBranchAlias(aliasprefix_+"_VIDSpring16GPMvaValue"         );
+    produces<vector<int> >       (branchprefix+"VIDSpring16GPMvaCat"        ).setBranchAlias(aliasprefix_+"_VIDSpring16GPMvaCat"           );
+    produces<vector<float> >     (branchprefix+"VIDSpring16HZZMvaValue"     ).setBranchAlias(aliasprefix_+"_VIDSpring16HZZMvaValue"         );
+    produces<vector<int> >       (branchprefix+"VIDSpring16HZZMvaCat"       ).setBranchAlias(aliasprefix_+"_VIDSpring16HZZMvaCat"           );
+    }
 
     // for the ID definitions, see https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideElectronID
     // the decisions should be the SAME as the els_pat_*id branches made by PATElectronMaker
@@ -317,6 +319,9 @@ ElectronMaker::ElectronMaker(const ParameterSet& iConfig) {
     produces<vector<int> > (branchprefix+"isEB").setBranchAlias(aliasprefix_+"_isEB");
 
     produces<vector<float> > (branchprefix+"scSeedEta").setBranchAlias(aliasprefix_+"_scSeedEta");
+    produces<vector<int> > (branchprefix + "hasGainSwitchFlag").setBranchAlias(aliasprefix_ + "_hasGainSwitchFlag");
+
+
 
 
 
@@ -1130,18 +1135,18 @@ void ElectronMaker::produce(Event& iEvent, const EventSetup& iSetup) {
     // iEvent.put(std::move(passMediumId), "passMediumId" );
     // iEvent.put(std::move(passTightId),  "passTightId"  );
     // iEvent.put(std::move(passHEEPId),                "passHEEPId"  );
-    iEvent.put(std::move(passVIDNonTrigMvaWP80Id),   "passVIDNonTrigMvaWP80Id"  );
-    iEvent.put(std::move(passVIDNonTrigMvaWP90Id),   "passVIDNonTrigMvaWP90Id"  );
-    iEvent.put(std::move(passVIDTrigMvaWP80Id),      "passVIDTrigMvaWP80Id"  );
-    iEvent.put(std::move(passVIDTrigMvaWP90Id),      "passVIDTrigMvaWP90Id"  );
-    iEvent.put(std::move(VIDNonTrigMvaValue),        "VIDNonTrigMvaValue"  );
-    iEvent.put(std::move(VIDTrigMvaValue),           "VIDTrigMvaValue"  );
-    iEvent.put(std::move(VIDNonTrigMvaCat),          "VIDNonTrigMvaCat"  );
-    iEvent.put(std::move(VIDTrigMvaCat),             "VIDTrigMvaCat"  );
-    iEvent.put(std::move(VIDSpring16GPMvaValue),     "VIDSpring16GPMvaValue"  );
-    iEvent.put(std::move(VIDSpring16GPMvaCat),       "VIDSpring16GPMvaCat"  );
-    iEvent.put(std::move(VIDSpring16HZZMvaValue),    "VIDSpring16HZZMvaValue"  );
-    iEvent.put(std::move(VIDSpring16HZZMvaCat),      "VIDSpring16HZZMvaCat"  );
+    iEvent.put(std::move(passVIDNonTrigMvaWP80Id),   branchprefix+"passVIDNonTrigMvaWP80Id"  );
+    iEvent.put(std::move(passVIDNonTrigMvaWP90Id),   branchprefix+"passVIDNonTrigMvaWP90Id"  );
+    iEvent.put(std::move(passVIDTrigMvaWP80Id),      branchprefix+"passVIDTrigMvaWP80Id"  );
+    iEvent.put(std::move(passVIDTrigMvaWP90Id),      branchprefix+"passVIDTrigMvaWP90Id"  );
+    iEvent.put(std::move(VIDNonTrigMvaValue),        branchprefix+"VIDNonTrigMvaValue"  );
+    iEvent.put(std::move(VIDTrigMvaValue),           branchprefix+"VIDTrigMvaValue"  );
+    iEvent.put(std::move(VIDNonTrigMvaCat),          branchprefix+"VIDNonTrigMvaCat"  );
+    iEvent.put(std::move(VIDTrigMvaCat),             branchprefix+"VIDTrigMvaCat"  );
+    iEvent.put(std::move(VIDSpring16GPMvaValue),     branchprefix+"VIDSpring16GPMvaValue"  );
+    iEvent.put(std::move(VIDSpring16GPMvaCat),       branchprefix+"VIDSpring16GPMvaCat"  );
+    iEvent.put(std::move(VIDSpring16HZZMvaValue),    branchprefix+"VIDSpring16HZZMvaValue"  );
+    iEvent.put(std::move(VIDSpring16HZZMvaCat),      branchprefix+"VIDSpring16HZZMvaCat"  );
     }
 
     // Track parameters

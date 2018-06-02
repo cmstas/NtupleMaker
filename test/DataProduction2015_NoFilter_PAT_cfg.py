@@ -35,7 +35,8 @@ process.options = cms.untracked.PSet( allowUnscheduled = cms.untracked.bool(True
 #Output
 process.out = cms.OutputModule("PoolOutputModule",
   fileName     = cms.untracked.string('ntuple.root'),
-  dropMetaData = cms.untracked.string("NONE")
+  dropMetaData = cms.untracked.string("ALL"),
+  basketSize = cms.untracked.int32(16384*23),
 )
 process.outpath = cms.EndPath(process.out)
 
@@ -106,12 +107,12 @@ process.hypDilepMaker.LooseLepton_PtCut  = cms.double(10.0)
 
 #Options for Input
 process.source = cms.Source("PoolSource",
-  fileNames = cms.untracked.vstring('/store/data/Run2016F/DoubleMuon/MINIAOD/03Feb2017-v1/100000/7055E48E-57EB-E611-97CA-0CC47A0AD6E4.root',)
+  fileNames = cms.untracked.vstring('/store/data/Run2016F/DoubleEG/MINIAOD/03Feb2017-v1/80000/10FF033B-6AEB-E611-846F-0CC47AD99044.root',)
 )
 process.source.noEventSort = cms.untracked.bool( True )
 
 #Max Events
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(3000) )
 
 #Run corrected MET maker
 
@@ -230,16 +231,16 @@ process.out.outputCommands.extend(cms.untracked.vstring('drop patMETs_patCaloMet
 
 process.p = cms.Path( 
   process.metFilterMaker *
-  process.hcalNoiseSummaryMaker *
+  # process.hcalNoiseSummaryMaker *
   process.egmGsfElectronIDSequence *     
-  process.beamSpotMaker *
+  # process.beamSpotMaker *
   process.vertexMaker *
   process.secondaryVertexMaker *
   process.eventMaker *
   process.pfCandidateMaker *
   process.pfCandidateDiscardedMaker *
-  process.isoTrackMaker *
-  process.recoConversionMaker *
+  # process.isoTrackMaker *
+  # process.recoConversionMaker *
   process.electronBeforeGSFixMaker *
   process.electronMaker *
   process.muonMaker *
@@ -262,13 +263,13 @@ process.p = cms.Path(
   process.photonMaker *
   #process.genMaker *
   #process.genJetMaker *
-  process.muToTrigAssMaker *  # requires muonMaker
-  process.elToTrigAssMaker *  # requires electronMaker
-  process.photonToTrigAssMaker *  # requires photonMaker
+  # process.muToTrigAssMaker *  # requires muonMaker
+  # process.elToTrigAssMaker *  # requires electronMaker
+  # process.photonToTrigAssMaker *  # requires photonMaker
   #process.candToGenAssMaker * # requires electronMaker, muonMaker, pfJetMaker, photonMaker
   #process.pdfinfoMaker *
   #process.puSummaryInfoMaker *
-  process.recoConversionMaker *
+  # process.recoConversionMaker *
   process.miniAODrhoSequence *
   process.hypDilepMaker
 )
@@ -276,3 +277,6 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 100
 process.eventMaker.isData                        = cms.bool(True)
 process.pfmetMaker.isData                        = process.eventMaker.isData
 
+process.Timing = cms.Service("Timing",
+        summaryOnly = cms.untracked.bool(True)
+        )
