@@ -58,6 +58,7 @@ private:
   edm::InputTag pfCandidatesTag_;
   double pfJetPtCut_;
   bool keepless_;
+  bool enableTagging_;
   std::string aliasprefix_;
   std::string PFJetCorrectorL2L3_;
   std::string PFJetCorrectorL1L2L3_;

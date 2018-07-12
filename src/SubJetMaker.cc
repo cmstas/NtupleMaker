@@ -23,22 +23,26 @@ SubJetMaker::SubJetMaker(const edm::ParameterSet& iConfig) {
   pfJetsToken = consumes<edm::View<pat::Jet> >(iConfig.getParameter<edm::InputTag>("pfJetsInputTag"));
   pfJetPtCut_ = iConfig.getParameter<double> ( "pfJetPtCut"   );
   keepless_   = iConfig.getParameter<bool>   ( "lessBranches" );
+  enableTagging_   = iConfig.getParameter<bool>   ( "enableTagging" );
 
-  // initialize the FatJetNN class in the constructor
-  auto cc = consumesCollector();
-  // use the full path or put the file in the current working directory <-- doing the latter
-  fatjetNN_ = new deepntuples::FatJetNN(iConfig, cc);
-  // load json for input variable transformation and DNN model and parameter files
-  string nnparampath = iConfig.getUntrackedParameter<std::string>("nndatapath", "NNKit/data/ak8");
-  fatjetNN_->load_json(edm::FileInPath(nnparampath+"/full/preprocessing.json").fullPath());
-  fatjetNN_->load_model(edm::FileInPath(nnparampath+"/full/resnet-symbol.json").fullPath(), edm::FileInPath(nnparampath+"/full/resnet.params").fullPath());
-  // fatjetNN_->load_json("preprocessing.json");                   // load json for input variable transformation
-  // fatjetNN_->load_model("resnet-symbol.json", "resnet.params"); // load DNN model and parameter files
+  if (enableTagging_) {
 
-  // DecorrMode == 0
-  decorrNN_ = new deepntuples::FatJetNN(iConfig, cc);
-  decorrNN_->load_json(edm::FileInPath(nnparampath+"/decorrelated/preprocessing.json").fullPath());
-  decorrNN_->load_model(edm::FileInPath(nnparampath+"/decorrelated/resnet-symbol.json").fullPath(), edm::FileInPath(nnparampath+"/decorrelated/resnet.params").fullPath());
+      // initialize the FatJetNN class in the constructor
+      auto cc = consumesCollector();
+      // use the full path or put the file in the current working directory <-- doing the latter
+      fatjetNN_ = new deepntuples::FatJetNN(iConfig, cc);
+      // load json for input variable transformation and DNN model and parameter files
+      string nnparampath = iConfig.getUntrackedParameter<std::string>("nndatapath", "NNKit/data/ak8");
+      fatjetNN_->load_json(edm::FileInPath(nnparampath+"/full/preprocessing.json").fullPath());
+      fatjetNN_->load_model(edm::FileInPath(nnparampath+"/full/resnet-symbol.json").fullPath(), edm::FileInPath(nnparampath+"/full/resnet.params").fullPath());
+      // fatjetNN_->load_json("preprocessing.json");                   // load json for input variable transformation
+      // fatjetNN_->load_model("resnet-symbol.json", "resnet.params"); // load DNN model and parameter files
+
+      // DecorrMode == 0
+      decorrNN_ = new deepntuples::FatJetNN(iConfig, cc);
+      decorrNN_->load_json(edm::FileInPath(nnparampath+"/decorrelated/preprocessing.json").fullPath());
+      decorrNN_->load_model(edm::FileInPath(nnparampath+"/decorrelated/resnet-symbol.json").fullPath(), edm::FileInPath(nnparampath+"/decorrelated/resnet.params").fullPath());
+  }
 
   // product of this EDProducer
   produces<vector<LorentzVector> > ( "ak8jetsp4"                               ).setBranchAlias( "ak8jets_p4"                        );
@@ -167,27 +171,29 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
     ak8jets_area          -> push_back( pfjet_it->jetArea()                  );
     ak8jets_partonFlavour -> push_back( pfjet_it->partonFlavour()            );
 
-    const auto& nnpreds = fatjetNN_->predict( *pfjet_it );
-    deepntuples::FatJetNNHelper nnhelper( nnpreds );
+    if (enableTagging_) {
+        const auto& nnpreds = fatjetNN_->predict( *pfjet_it );
+        deepntuples::FatJetNNHelper nnhelper( nnpreds );
 
-    ak8jets_deep_rawdisc_qcd ->push_back( nnhelper.get_raw_score_qcd()       );
-    ak8jets_deep_rawdisc_top ->push_back( nnhelper.get_raw_score_top()       );
-    ak8jets_deep_rawdisc_w   ->push_back( nnhelper.get_raw_score_w()         );
-    ak8jets_deep_rawdisc_z   ->push_back( nnhelper.get_raw_score_z()         );
-    ak8jets_deep_rawdisc_zbb ->push_back( nnhelper.get_raw_score_zbb()       );
-    ak8jets_deep_rawdisc_hbb ->push_back( nnhelper.get_raw_score_hbb()       );
-    ak8jets_deep_rawdisc_h4q ->push_back( nnhelper.get_raw_score_h4q()       );
+        ak8jets_deep_rawdisc_qcd ->push_back( nnhelper.get_raw_score_qcd()       );
+        ak8jets_deep_rawdisc_top ->push_back( nnhelper.get_raw_score_top()       );
+        ak8jets_deep_rawdisc_w   ->push_back( nnhelper.get_raw_score_w()         );
+        ak8jets_deep_rawdisc_z   ->push_back( nnhelper.get_raw_score_z()         );
+        ak8jets_deep_rawdisc_zbb ->push_back( nnhelper.get_raw_score_zbb()       );
+        ak8jets_deep_rawdisc_hbb ->push_back( nnhelper.get_raw_score_hbb()       );
+        ak8jets_deep_rawdisc_h4q ->push_back( nnhelper.get_raw_score_h4q()       );
 
-    // decorrMode == 0
-    const auto& mdpreds = decorrNN_->predict( *pfjet_it );
-    deepntuples::FatJetNNHelper md(mdpreds);
-    ak8jets_decorr_binscore_hbb      ->push_back( md.get_binarized_score_hbb()      );
-    ak8jets_decorr_rawscore_top      ->push_back( md.get_raw_score_top()            );
-    ak8jets_decorr_rawscore_hbb      ->push_back( md.get_raw_score_hbb()            );
-    ak8jets_decorr_flavscore_bb      ->push_back( md.get_flavor_score_bb()          ); // H->bb + Z->bb + gluon->bb
-    ak8jets_decorr_flavscore_cc      ->push_back( md.get_flavor_score_cc()          ); // H->cc + Z->cc + gluon->cc
-    ak8jets_decorr_flavscore_bb_no_g ->push_back( md.get_flavor_score_bb_no_gluon() ); // H->bb + Z->bb
-    ak8jets_decorr_flavscore_cc_no_g ->push_back( md.get_flavor_score_cc_no_gluon() ); // H->cc + Z->cc
+        // decorrMode == 0
+        const auto& mdpreds = decorrNN_->predict( *pfjet_it );
+        deepntuples::FatJetNNHelper md(mdpreds);
+        ak8jets_decorr_binscore_hbb      ->push_back( md.get_binarized_score_hbb()      );
+        ak8jets_decorr_rawscore_top      ->push_back( md.get_raw_score_top()            );
+        ak8jets_decorr_rawscore_hbb      ->push_back( md.get_raw_score_hbb()            );
+        ak8jets_decorr_flavscore_bb      ->push_back( md.get_flavor_score_bb()          ); // H->bb + Z->bb + gluon->bb
+        ak8jets_decorr_flavscore_cc      ->push_back( md.get_flavor_score_cc()          ); // H->cc + Z->cc + gluon->cc
+        ak8jets_decorr_flavscore_bb_no_g ->push_back( md.get_flavor_score_bb_no_gluon() ); // H->bb + Z->bb
+        ak8jets_decorr_flavscore_cc_no_g ->push_back( md.get_flavor_score_cc_no_gluon() ); // H->cc + Z->cc
+    }
 
     const vector<pair<string,float>> bDiscriminatorPairs = pfjet_it->getPairDiscri();
     vector<float> bDiscriminatorPerjet;
