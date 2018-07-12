@@ -35,6 +35,11 @@ SubJetMaker::SubJetMaker(const edm::ParameterSet& iConfig) {
   // fatjetNN_->load_json("preprocessing.json");                   // load json for input variable transformation
   // fatjetNN_->load_model("resnet-symbol.json", "resnet.params"); // load DNN model and parameter files
 
+  // DecorrMode == 0
+  decorrNN_ = new deepntuples::FatJetNN(iConfig, cc);
+  decorrNN_->load_json(edm::FileInPath(nnparampath+"/decorrelated/preprocessing.json").fullPath());
+  decorrNN_->load_model(edm::FileInPath(nnparampath+"/decorrelated/resnet-symbol.json").fullPath(), edm::FileInPath(nnparampath+"/decorrelated/resnet.params").fullPath());
+
   // product of this EDProducer
   produces<vector<LorentzVector> > ( "ak8jetsp4"                               ).setBranchAlias( "ak8jets_p4"                        );
   produces<vector<float> >         ( "ak8jetsundoJEC"                          ).setBranchAlias( "ak8jets_undoJEC"                   );
@@ -57,6 +62,15 @@ SubJetMaker::SubJetMaker(const edm::ParameterSet& iConfig) {
   produces<vector<float> >         ( "ak8jetsdeeprawdisczbb"                   ).setBranchAlias( "ak8jets_deep_rawdisc_zbb"          );
   produces<vector<float> >         ( "ak8jetsdeeprawdischbb"                   ).setBranchAlias( "ak8jets_deep_rawdisc_hbb"          );
   produces<vector<float> >         ( "ak8jetsdeeprawdisch4q"                   ).setBranchAlias( "ak8jets_deep_rawdisc_h4q"          );
+
+  // decorrMode == 0
+  produces<vector<float> >         ( "ak8jetsdecorrbinscorehbb"                ).setBranchAlias( "ak8jets_decorr_binscore_hbb"       );
+  produces<vector<float> >         ( "ak8jetsdecorrrawscoretop"                ).setBranchAlias( "ak8jets_decorr_rawscore_top"       );
+  produces<vector<float> >         ( "ak8jetsdecorrrawscorehbb"                ).setBranchAlias( "ak8jets_decorr_rawscore_hbb"       );
+  produces<vector<float> >         ( "ak8jetsdecorrflavscorebb"                ).setBranchAlias( "ak8jets_decorr_flavscore_bb"       );
+  produces<vector<float> >         ( "ak8jetsdecorrflavscorecc"                ).setBranchAlias( "ak8jets_decorr_flavscore_cc"       );
+  produces<vector<float> >         ( "ak8jetsdecorrflavscorebbnog"             ).setBranchAlias( "ak8jets_decorr_flavscore_bb_no_g"  );
+  produces<vector<float> >         ( "ak8jetsdecorrflavscoreccnog"             ).setBranchAlias( "ak8jets_decorr_flavscore_cc_no_g"  );
 
   produces<vector<TString> >       ( "ak8jetsbDiscriminatorNames"              ).setBranchAlias( "ak8jets_bDiscriminatorNames"       );
   produces<vector<vector<float>> > ( "ak8jetsbDiscriminators"                  ).setBranchAlias( "ak8jets_bDiscriminators"           );
@@ -113,6 +127,15 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   unique_ptr<vector<float> >         ak8jets_deep_rawdisc_hbb         (new vector<float>          );
   unique_ptr<vector<float> >         ak8jets_deep_rawdisc_h4q         (new vector<float>          );
 
+  // decorrMode == 0
+  unique_ptr<vector<float> >         ak8jets_decorr_binscore_hbb      (new vector<float>          );
+  unique_ptr<vector<float> >         ak8jets_decorr_rawscore_top      (new vector<float>          );
+  unique_ptr<vector<float> >         ak8jets_decorr_rawscore_hbb      (new vector<float>          );
+  unique_ptr<vector<float> >         ak8jets_decorr_flavscore_bb      (new vector<float>          );
+  unique_ptr<vector<float> >         ak8jets_decorr_flavscore_cc      (new vector<float>          );
+  unique_ptr<vector<float> >         ak8jets_decorr_flavscore_bb_no_g (new vector<float>          );
+  unique_ptr<vector<float> >         ak8jets_decorr_flavscore_cc_no_g (new vector<float>          );
+
   unique_ptr<vector<TString> >       ak8jets_bDiscriminatorNames      (new vector<TString>        );
   unique_ptr<vector<vector<float>> > ak8jets_bDiscriminators          (new vector<vector<float> > );
 
@@ -130,6 +153,7 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   iEvent.getByToken(pfJetsToken, pfJetsHandle);
 
   fatjetNN_->readEvent(iEvent, iSetup);
+  decorrNN_->readEvent(iEvent, iSetup);
 
   for (View<pat::Jet>::const_iterator pfjet_it = pfJetsHandle->begin(); pfjet_it != pfJetsHandle->end(); pfjet_it++) {
 
@@ -153,6 +177,17 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
     ak8jets_deep_rawdisc_zbb ->push_back( nnhelper.get_raw_score_zbb()       );
     ak8jets_deep_rawdisc_hbb ->push_back( nnhelper.get_raw_score_hbb()       );
     ak8jets_deep_rawdisc_h4q ->push_back( nnhelper.get_raw_score_h4q()       );
+
+    // decorrMode == 0
+    const auto& mdpreds = decorrNN_->predict( *pfjet_it );
+    deepntuples::FatJetNNHelper md(mdpreds);
+    ak8jets_decorr_binscore_hbb      ->push_back( md.get_binarized_score_hbb()      );
+    ak8jets_decorr_rawscore_top      ->push_back( md.get_raw_score_top()            );
+    ak8jets_decorr_rawscore_hbb      ->push_back( md.get_raw_score_hbb()            );
+    ak8jets_decorr_flavscore_bb      ->push_back( md.get_flavor_score_bb()          ); // H->bb + Z->bb + gluon->bb
+    ak8jets_decorr_flavscore_cc      ->push_back( md.get_flavor_score_cc()          ); // H->cc + Z->cc + gluon->cc
+    ak8jets_decorr_flavscore_bb_no_g ->push_back( md.get_flavor_score_bb_no_gluon() ); // H->bb + Z->bb
+    ak8jets_decorr_flavscore_cc_no_g ->push_back( md.get_flavor_score_cc_no_gluon() ); // H->cc + Z->cc
 
     const vector<pair<string,float>> bDiscriminatorPairs = pfjet_it->getPairDiscri();
     vector<float> bDiscriminatorPerjet;
@@ -255,6 +290,15 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   iEvent.put(std::move(ak8jets_deep_rawdisc_zbb         ), "ak8jetsdeeprawdisczbb"      );
   iEvent.put(std::move(ak8jets_deep_rawdisc_hbb         ), "ak8jetsdeeprawdischbb"      );
   iEvent.put(std::move(ak8jets_deep_rawdisc_h4q         ), "ak8jetsdeeprawdisch4q"      );
+
+  // decorrMode == 0
+  iEvent.put(std::move(ak8jets_decorr_binscore_hbb      ), "ak8jetsdecorrbinscorehbb"   );
+  iEvent.put(std::move(ak8jets_decorr_rawscore_top      ), "ak8jetsdecorrrawscoretop"   );
+  iEvent.put(std::move(ak8jets_decorr_rawscore_hbb      ), "ak8jetsdecorrrawscorehbb"   );
+  iEvent.put(std::move(ak8jets_decorr_flavscore_bb      ), "ak8jetsdecorrflavscorebb"   );
+  iEvent.put(std::move(ak8jets_decorr_flavscore_cc      ), "ak8jetsdecorrflavscorecc"   );
+  iEvent.put(std::move(ak8jets_decorr_flavscore_bb_no_g ), "ak8jetsdecorrflavscorebbnog");
+  iEvent.put(std::move(ak8jets_decorr_flavscore_cc_no_g ), "ak8jetsdecorrflavscoreccnog");
 
   iEvent.put(std::move(ak8jets_bDiscriminatorNames      ), "ak8jetsbDiscriminatorNames" );
   iEvent.put(std::move(ak8jets_bDiscriminators          ), "ak8jetsbDiscriminators"     );

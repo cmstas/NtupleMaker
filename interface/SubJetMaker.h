@@ -52,6 +52,7 @@ private:
   // ----------member data ---------------------------
 
   deepntuples::FatJetNN* fatjetNN_;
+  deepntuples::FatJetNN* decorrNN_;
 
   edm::EDGetTokenT<edm::View<pat::Jet> > pfJetsToken;
   edm::InputTag pfCandidatesTag_;
