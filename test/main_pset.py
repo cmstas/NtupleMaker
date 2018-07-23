@@ -8,12 +8,15 @@ import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
 opts = VarParsing.VarParsing('python')
 vpbool = VarParsing.VarParsing.varType.bool
+vpstring = VarParsing.VarParsing.varType.string
 opts.register('data'    , False  , mytype=vpbool)
 opts.register('prompt'  , False  , mytype=vpbool)
 opts.register('fastsim' , False , mytype=vpbool)
 opts.register('relval'  , False , mytype=vpbool)
 opts.register('triginfo'  , False , mytype=vpbool)
+opts.register('name'  , "" , mytype=vpstring) # hacky variable to override name for samples where last path/process is "DQM"
 opts.parseArguments()
+
 # be smart. if fastsim, it's obviously MC
 # if it's MC, it's obviously not prompt
 if opts.fastsim: opts.data = False
@@ -24,7 +27,8 @@ print """PSet is assuming:
    fastsim? {}
    relval? {}
    triginfo? {}
-""".format(bool(opts.data), bool(opts.prompt), bool(opts.fastsim), bool(opts.relval), bool(opts.triginfo))
+   name = {}
+""".format(bool(opts.data), bool(opts.prompt), bool(opts.fastsim), bool(opts.relval), bool(opts.triginfo), str(opts.name))
 
 import CMS3.NtupleMaker.configProcessName as configProcessName
 configProcessName.name="PAT"
@@ -45,6 +49,9 @@ if opts.fastsim:
     configProcessName.fastSimName="HLT"
     configProcessName.name2=configProcessName.fastSimName
 configProcessName.isFastSim=opts.fastsim
+
+if str(opts.name).strip():
+    configProcessName.name = str(opts.name).strip()
 
 # CMS3
 process = cms.Process("CMS3")
@@ -367,10 +374,10 @@ process.Timing = cms.Service("Timing",
 # process.eventMaker.datasetName = cms.string('SUPPLY_DATASETNAME')
 # process.maxEvents.input = cms.untracked.int32(SUPPLY_MAX_NEVENTS)
 
-# process.GlobalTag.globaltag = "94X_dataRun2_ReReco_EOY17_v2"
+process.GlobalTag.globaltag = "94X_dataRun2_v10"
 process.out.fileName = cms.untracked.string('ntuple.root')
 #process.source.fileNames = cms.untracked.vstring('/store/data/Run2017D/SingleMuon/MINIAOD/31Mar2018-v1/80000/1E703527-F436-E811-80A7-E0DB55FC1055.root')
-# process.source.fileNames = cms.untracked.vstring('file:1E703527-F436-E811-80A7-E0DB55FC1055.root')
-process.eventMaker.CMS3tag = cms.string('V04')
-process.eventMaker.datasetName = cms.string('/DYJetsToLL_M-50_HT-800to1200_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM')
+process.source.fileNames = cms.untracked.vstring('/store/data/Run2016C/MuonEG/MINIAOD/17Jul2018-v1/50000/E039F2A0-228C-E811-AE2F-A0369FE2C22E.root')
+process.eventMaker.CMS3tag = cms.string('test')
+process.eventMaker.datasetName = cms.string('/MuonEG/Run2016C-17Jul2018-v1/MINIAOD')
 #process.maxEvents.input = cms.untracked.int32(1000)
