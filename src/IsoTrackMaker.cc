@@ -169,7 +169,6 @@ void IsoTrackMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 	  nearestPF_id = (*it.nearestPFPackedCandRef()).pdgId();
 	}
 	// Only available if in lostTrack/PFCand collections, and even then sometimes unavailable.
-	// pseudoTrack uses candidate kinematics, which sometimes differ from the raw track kinematics used by bestTrack. We want the latter.
 	const float pterr = it.packedCandRef().isNonnull() && (*it.packedCandRef()).hasTrackDetails() ? (*it.packedCandRef()).bestTrack()->ptError() : -1;
 
 	int signature = 0; int lastLayer = -1; int lastSubdet = -1; int overallLayer = -1;
