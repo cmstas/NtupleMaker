@@ -32,6 +32,9 @@ IsoTrackMaker::IsoTrackMaker(const edm::ParameterSet& iConfig){
     pt_cut_noIso_  = iConfig.getParameter<double>("pT_cut_noIso");
 
     produces<vector<LorentzVector> > ("isotracksp4"         ).setBranchAlias("isotracks_p4"         );
+    produces<vector<float> >         ("isotrackspttrk"      ).setBranchAlias("isotracks_pttrk"      );
+    produces<vector<float> >         ("isotracksetatrk"      ).setBranchAlias("isotracks_etatrk"      );
+    produces<vector<float> >         ("isotracksphitrk"      ).setBranchAlias("isotracks_phitrk"      );
     produces<vector<float> >         ("isotrackspterr"      ).setBranchAlias("isotracks_pterr"      );
     produces<vector<float> >         ("isotracksdz"         ).setBranchAlias("isotracks_dz"         );
     produces<vector<float> >         ("isotracksdxy"        ).setBranchAlias("isotracks_dxy"         );
@@ -83,6 +86,9 @@ void IsoTrackMaker::endJob()   {}
 void IsoTrackMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
     unique_ptr<vector<LorentzVector> > isotracks_p4                  (new vector<LorentzVector> );
+    unique_ptr<vector<float> >         isotracks_pttrk               (new vector<float>         );
+    unique_ptr<vector<float> >         isotracks_etatrk               (new vector<float>         );
+    unique_ptr<vector<float> >         isotracks_phitrk               (new vector<float>         );
     unique_ptr<vector<float> >         isotracks_pterr               (new vector<float>         );
     unique_ptr<vector<float> >         isotracks_dz                  (new vector<float>         );
     unique_ptr<vector<float> >         isotracks_dxy                 (new vector<float>         );
@@ -162,8 +168,9 @@ void IsoTrackMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 	  nearestPF_pt = (*it.nearestPFPackedCandRef()).pt();
 	  nearestPF_id = (*it.nearestPFPackedCandRef()).pdgId();
 	}
-	// Only available if in lostTrack/PFCand collections, and even then sometimes unavailable
-	const float pterr = it.packedCandRef().isNonnull() && (*it.packedCandRef()).hasTrackDetails() ? (*it.packedCandRef()).pseudoTrack().ptError() : -1;
+	// Only available if in lostTrack/PFCand collections, and even then sometimes unavailable.
+	// pseudoTrack uses candidate kinematics, which sometimes differ from the raw track kinematics used by bestTrack. We want the latter.
+	const float pterr = it.packedCandRef().isNonnull() && (*it.packedCandRef()).hasTrackDetails() ? (*it.packedCandRef()).bestTrack()->ptError() : -1;
 
 	int signature = 0; int lastLayer = -1; int lastSubdet = -1; int overallLayer = -1;
 	const HitPattern &hp = it.hitPattern();
@@ -177,7 +184,25 @@ void IsoTrackMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 	  if (hp.validHitFilter(hit)) signature |= (1 << overallLayer); // If missing, there'll end up being a 0 in this bit
 	}
 
+	// Extract track kinematics
+	float ptTrk = -999.0; float etaTrk = -999.0; float phiTrk = -999.0;
+	// If an isotrack has no packedCandRef, it is from the general tracks collection, so it.p4() is already track p4(). 
+	if ( unlikely(it.packedCandRef().isNull()) ) {
+	  ptTrk = it.p4().pt();
+	  etaTrk = it.p4().eta();
+	  phiTrk = it.p4().phi();
+	}
+	// Sometimes, an isotrack is from a candidate that has no track.
+	else if ( (*it.packedCandRef()).hasTrackDetails() ) {
+	  ptTrk = (*it.packedCandRef()).ptTrk();
+	  etaTrk = (*it.packedCandRef()).etaAtVtx();
+	  phiTrk = (*it.packedCandRef()).phiAtVtx();
+	}
+
         isotracks_p4          ->push_back( LorentzVector( it.p4()) );
+	isotracks_pttrk->push_back( ptTrk );
+	isotracks_etatrk->push_back( etaTrk );
+	isotracks_phitrk->push_back( phiTrk );	  
 	isotracks_pterr       ->push_back( pterr );
         isotracks_charge      ->push_back( it.charge() );
         isotracks_particleId  ->push_back( it.pdgId() );
@@ -222,6 +247,9 @@ void IsoTrackMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     }//loop over candidate collection
 
     iEvent.put(std::move(isotracks_p4),                   "isotracksp4"       );
+    iEvent.put(std::move(isotracks_pttrk),                "isotrackspttrk"    );
+    iEvent.put(std::move(isotracks_etatrk),               "isotracksetatrk"   );
+    iEvent.put(std::move(isotracks_phitrk),               "isotracksphitrk"   );
     iEvent.put(std::move(isotracks_pterr),                "isotrackspterr"    );
     iEvent.put(std::move(isotracks_dz),                   "isotracksdz"       );
     iEvent.put(std::move(isotracks_dxy),                  "isotracksdxy"       );

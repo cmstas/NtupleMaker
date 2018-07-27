@@ -297,7 +297,7 @@ if opts.data:
         process.muonMaker *
         process.pfJetMaker *
         process.pfJetPUPPIMaker *
-        process.subJetMaker *
+#        process.subJetMaker *
         process.pfmetMaker *
         process.pfmetpuppiMaker *
         process.hltMakerSequence *
@@ -328,7 +328,7 @@ else:
         process.muonMaker *
         process.pfJetMaker *
         process.pfJetPUPPIMaker *
-        process.subJetMaker *
+#        process.subJetMaker *
         process.pfmetMaker *
         process.pfmetpuppiMaker *
         process.hltMakerSequence *
@@ -377,7 +377,7 @@ process.Timing = cms.Service("Timing",
 process.GlobalTag.globaltag = "94X_dataRun2_v10"
 process.out.fileName = cms.untracked.string('ntuple.root')
 #process.source.fileNames = cms.untracked.vstring('/store/data/Run2017D/SingleMuon/MINIAOD/31Mar2018-v1/80000/1E703527-F436-E811-80A7-E0DB55FC1055.root')
-process.source.fileNames = cms.untracked.vstring('/store/data/Run2016C/MuonEG/MINIAOD/17Jul2018-v1/50000/E039F2A0-228C-E811-AE2F-A0369FE2C22E.root')
+#process.source.fileNames = cms.untracked.vstring('/store/data/Run2016C/MuonEG/MINIAOD/17Jul2018-v1/50000/E039F2A0-228C-E811-AE2F-A0369FE2C22E.root')
 process.eventMaker.CMS3tag = cms.string('test')
 process.eventMaker.datasetName = cms.string('/MuonEG/Run2016C-17Jul2018-v1/MINIAOD')
-#process.maxEvents.input = cms.untracked.int32(1000)
+process.maxEvents.input = cms.untracked.int32(1000)
