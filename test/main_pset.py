@@ -297,7 +297,7 @@ if opts.data:
         process.muonMaker *
         process.pfJetMaker *
         process.pfJetPUPPIMaker *
-#        process.subJetMaker *
+        process.subJetMaker *
         process.pfmetMaker *
         process.pfmetpuppiMaker *
         process.hltMakerSequence *
@@ -328,7 +328,7 @@ else:
         process.muonMaker *
         process.pfJetMaker *
         process.pfJetPUPPIMaker *
-#        process.subJetMaker *
+        process.subJetMaker *
         process.pfmetMaker *
         process.pfmetpuppiMaker *
         process.hltMakerSequence *
