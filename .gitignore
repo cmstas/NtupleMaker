@@ -8,3 +8,7 @@
 *.sh
 crab
 **/crab_projects
+*.tgz
+*.xz
+*.tar
+*.png
