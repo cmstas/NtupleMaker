@@ -98,18 +98,15 @@ rmdir $CMSSW_BASE/bullshit
 #  DeepAK8 fat jet tagger
 # #######################
 cd $CMSSW_BASE/src
-# check out the package - note, need ssh key in gitlab.cern.ch
-# because this is top secret code that needs to be password protected apparently
-# and thus, the user must either configure ssh keys or manually type their password.
-# the latter ruins the whole "run this install script, get a coffee, use the ntuplemaker" workflow.
-git clone ssh://git@gitlab.cern.ch:7999/DeepAK8/NNKit.git -b ver_2018-03-08
-# setup mxnet library
+# check out the package from GitLab - note, need ssh key in gitlab.cern.ch
+# or copy over the local copy on nfs to avoid permission issue for gitlab
+# git clone ssh://git@gitlab.cern.ch:7999/DeepAK8/NNKit.git -b ver_2018-03-08
+cp -r /nfs-7/userdata/NtupleModules/NNKit_ver_2018-03-08 NNKit
+# setup mxnet library, that is not in CMSSW
 cp NNKit/misc/mxnet_predict.xml $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected
 scram setup mxnet_predict
 rm $CMSSW_BASE/external/$SCRAM_ARCH/lib/libmxnet_predict.so
 cp NNKit/misc/lib/libmxnet_predict.so $CMSSW_BASE/external/$SCRAM_ARCH/lib/libmxnet_predict.so
-# copy json files to test directory (or wherever you are doing cmsRun)
-# cp NNKit/data/ak8/*.{json,params} $CMSSW_BASE/src/CMS3/NtupleMaker/test/
 # #######################
 
 
