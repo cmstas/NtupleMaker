@@ -2,7 +2,7 @@
 
 #USER INPUTS
 CMS3Tag=master
-CMSSW_release=CMSSW_9_4_6_patch1
+CMSSW_release=CMSSW_9_4_9
 CMSSW_release_name=    #Leave this blank if you don't know what it is.  It's just a marker in case you have multiple identical directories.  Don't forget the underscore!
 export SCRAM_ARCH=slc6_amd64_gcc630
 
@@ -15,6 +15,9 @@ eval `scramv1 runtime -sh`
 
 # SLOW -- default
 git cms-init
+
+# For MET recipe for 2017 EE noise fix
+git cms-merge-topic cms-met:METFixEE2017_949
 
 # # FAST -- because there's a million tags to fetch nowadays
 # curl -O "https://raw.githubusercontent.com/cms-sw/cms-git-tools/master/git-cms-init"

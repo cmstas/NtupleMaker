@@ -222,27 +222,35 @@ if usePrivateSQlite:
 process.outpath = cms.EndPath(process.out)
 process.out.outputCommands = cms.untracked.vstring( 'drop *' )
 
-if not opts.data:
-    from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
+# Comment this out because we need to rerun full MET computation for both data and MC in order to include MET Recipe 2017 EE noise fix
+#if not opts.data:
+#    from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
     #default configuration for miniAOD reprocessing, change the isData flag to run on data
     #for a full met computation, remove the pfCandColl input
-    runMetCorAndUncFromMiniAOD(process,
-                               isData=opts.data,
-                               )
+#    runMetCorAndUncFromMiniAOD(process,
+#                               isData=opts.data,
+#                               )
+
+from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
+runMetCorAndUncFromMiniAOD(process,
+                           isData=opts.data,
+			   fixEE2017 = True,
+			   postfix = "ModifiedMET"
+)
 
 process.out.outputCommands = cms.untracked.vstring( 'drop *' )
 process.out.outputCommands.extend(cms.untracked.vstring('keep *_*Maker*_*_CMS3*'))
 
 ### -------------------------------------------------------------------
-### the lines below remove the L2L3 residual corrections when processing data
+### the lines below remove the L2L3 residual corrections when processing MC
 ### -------------------------------------------------------------------
 if not applyResiduals:
     process.patPFMetT1T2Corr.jetCorrLabelRes = cms.InputTag("L3Absolute")
     process.patPFMetT1T2SmearCorr.jetCorrLabelRes = cms.InputTag("L3Absolute")
     process.patPFMetT2Corr.jetCorrLabelRes = cms.InputTag("L3Absolute")
     process.patPFMetT2SmearCorr.jetCorrLabelRes = cms.InputTag("L3Absolute")
-    process.shiftedPatJetEnDown.jetCorrLabelUpToL3Res = cms.InputTag("ak4PFCHSL1FastL2L3Corrector")
-    process.shiftedPatJetEnUp.jetCorrLabelUpToL3Res = cms.InputTag("ak4PFCHSL1FastL2L3Corrector")
+#    process.shiftedPatJetEnDown.jetCorrLabelUpToL3Res = cms.InputTag("ak4PFCHSL1FastL2L3Corrector")
+#    process.shiftedPatJetEnUp.jetCorrLabelUpToL3Res = cms.InputTag("ak4PFCHSL1FastL2L3Corrector")
 ### ------------------------------------------------------------------
 
 # end Run corrected MET maker
@@ -298,7 +306,9 @@ if opts.data:
         process.pfJetMaker *
         process.pfJetPUPPIMaker *
         process.subJetMaker *
+        process.fullPatMetSequenceModifiedMET * # for MET recipe for 2017 EE noise fix
         process.pfmetMaker *
+	process.pfmetMakerModifiedMET *
         process.pfmetpuppiMaker *
         process.hltMakerSequence *
         process.miniAODrhoSequence *
@@ -329,7 +339,9 @@ else:
         process.pfJetMaker *
         process.pfJetPUPPIMaker *
         process.subJetMaker *
+	process.fullPatMetSequenceModifiedMET * # for MET recipe for 2017 EE noise fix
         process.pfmetMaker *
+	process.pfmetMakerModifiedMET *
         process.pfmetpuppiMaker *
         process.hltMakerSequence *
         process.miniAODrhoSequence *
