@@ -98,12 +98,12 @@ cd $CMSSW_BASE/src
 #  DeepAK8 fat jet tagger
 # #######################
 cd $CMSSW_BASE/src
-cp -r ~namin/2018/deepak8/slimmed/NNKit .
+# cp -r ~namin/2018/deepak8/slimmed/NNKit .
 # check out the package - note, need ssh key in gitlab.cern.ch
 # because this is top secret code that needs to be password protected apparently
 # and thus, the user must either configure ssh keys or manually type their password.
 # the latter ruins the whole "run this install script, get a coffee, use the ntuplemaker" workflow.
-# git clone ssh://git@gitlab.cern.ch:7999/DeepAK8/NNKit.git
+git clone ssh://git@gitlab.cern.ch:7999/DeepAK8/NNKit.git
 # setup mxnet library
 cp NNKit/misc/*.xml $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected
 scram setup openblas
