@@ -13,8 +13,8 @@ scramv1 p -n ${CMSSW_release}${CMSSW_release_name} CMSSW $CMSSW_release
 cd ${CMSSW_release}${CMSSW_release_name}
 eval `scramv1 runtime -sh`
 
-# SLOW -- default
-git cms-init
+# new upstream-only ignores user's cmssw, but makes cms-init much, much faster
+git cms-init --upstream-only
 
 # For MET recipe for 2017 EE noise fix
 git cms-merge-topic cms-met:METFixEE2017_949
