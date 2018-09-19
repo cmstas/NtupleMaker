@@ -17,7 +17,7 @@ eval `scramv1 runtime -sh`
 git cms-init --upstream-only
 
 # For MET recipe for 2017 EE noise fix
-git cms-merge-topic cms-met:METFixEE2017_949
+git cms-merge-topic cms-met:METFixEE2017_949_v2
 
 # # FAST -- because there's a million tags to fetch nowadays
 # curl -O "https://raw.githubusercontent.com/cms-sw/cms-git-tools/master/git-cms-init"
