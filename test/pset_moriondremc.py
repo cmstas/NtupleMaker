@@ -55,7 +55,7 @@ process.configurationMetadata = cms.untracked.PSet(
 from Configuration.EventContent.EventContent_cff   import *
 
 # load event level configurations
-process.load('Configuration/EventContent/EventContent_cff')
+process.load("Configuration.EventContent.EventContent_cff")
 process.load("Configuration.StandardSequences.Services_cff")
 process.load('Configuration.Geometry.GeometryRecoDB_cff')
 process.load("Configuration.StandardSequences.MagneticField_cff")
@@ -64,44 +64,11 @@ process.load("Configuration.StandardSequences.GeometryRecoDB_cff")
 
 # services
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.GlobalTag.globaltag = "80X_mcRun2_asymptotic_2016_miniAODv2_v0"
+process.GlobalTag.globaltag = "80X_mcRun2_asymptotic_2016_miniAODv2_v8"
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 process.MessageLogger.cerr.threshold  = ''
 process.MessageLogger.suppressWarning = cms.untracked.vstring('ecalLaserCorrFilter','manystripclus53X','toomanystripclus53X')
 process.options = cms.untracked.PSet( allowUnscheduled = cms.untracked.bool(True),SkipEvent = cms.untracked.vstring('ProductNotFound') )
-
-process.out = cms.OutputModule("PoolOutputModule",
-                               fileName     = cms.untracked.string('ntuple.root'),
-                               dropMetaData = cms.untracked.string("ALL"),
-                               basketSize = cms.untracked.int32(16384*23)
-)
-
-
-
-#load cff and third party tools
-from JetMETCorrections.Configuration.DefaultJEC_cff import *
-from JetMETCorrections.Configuration.JetCorrectionServices_cff import *
-from JetMETCorrections.Configuration.CorrectedJetProducersDefault_cff import *
-from JetMETCorrections.Configuration.CorrectedJetProducers_cff import *
-from JetMETCorrections.Configuration.CorrectedJetProducersAllAlgos_cff import *
-process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
-
-#Electron Identification for PHYS 14
-from PhysicsTools.SelectorUtils.tools.vid_id_tools import *  
-from PhysicsTools.SelectorUtils.centralIDRegistry import central_id_registry
-process.load("RecoEgamma.ElectronIdentification.egmGsfElectronIDs_cfi")
-process.load("RecoEgamma.ElectronIdentification.ElectronMVAValueMapProducer_cfi")
-process.egmGsfElectronIDs.physicsObjectSrc = cms.InputTag('slimmedElectrons',"",configProcessName.name)
-process.electronMVAValueMapProducer.srcMiniAOD = cms.InputTag('slimmedElectrons',"",configProcessName.name)
-process.egmGsfElectronIDSequence = cms.Sequence(process.electronMVAValueMapProducer * process.egmGsfElectronIDs)
-my_id_modules = [
-        'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring15_25ns_nonTrig_V1_cff',
-        'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring15_25ns_Trig_V1_cff',
-        'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring16_GeneralPurpose_V1_cff',
-        'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring16_HZZ_V1_cff',
-                 ]
-for idmod in my_id_modules:
-    setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
 
 ### -------------------------------------------------------------------
 ### Setup puppi AK8 jets as input to the DeepAK8 tagger with puppi
@@ -127,6 +94,37 @@ jetToolbox(process, 'ak8', 'jetSequence', 'out', PUMethod='Puppi', JETCorrPayloa
 # srcJets = cms.untracked.InputTag('selectedPatJetsAK8PFPuppi')
 # srcSubjets = cms.untracked.InputTag('selectedPatJetsAK8PFPuppiSoftDropPacked')
 # ---------------------------------------------------------
+
+process.out = cms.OutputModule("PoolOutputModule",
+                               fileName     = cms.untracked.string('ntuple.root'),
+                               dropMetaData = cms.untracked.string("ALL"),
+                               basketSize = cms.untracked.int32(16384*23)
+)
+
+#load cff and third party tools
+from JetMETCorrections.Configuration.DefaultJEC_cff import *
+from JetMETCorrections.Configuration.JetCorrectionServices_cff import *
+from JetMETCorrections.Configuration.CorrectedJetProducersDefault_cff import *
+from JetMETCorrections.Configuration.CorrectedJetProducers_cff import *
+from JetMETCorrections.Configuration.CorrectedJetProducersAllAlgos_cff import *
+process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
+
+#Electron Identification for PHYS 14
+from PhysicsTools.SelectorUtils.tools.vid_id_tools import *  
+from PhysicsTools.SelectorUtils.centralIDRegistry import central_id_registry
+process.load("RecoEgamma.ElectronIdentification.egmGsfElectronIDs_cfi")
+process.load("RecoEgamma.ElectronIdentification.ElectronMVAValueMapProducer_cfi")
+process.egmGsfElectronIDs.physicsObjectSrc = cms.InputTag('slimmedElectrons',"",configProcessName.name)
+process.electronMVAValueMapProducer.srcMiniAOD = cms.InputTag('slimmedElectrons',"",configProcessName.name)
+process.egmGsfElectronIDSequence = cms.Sequence(process.electronMVAValueMapProducer * process.egmGsfElectronIDs)
+my_id_modules = [
+        'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring15_25ns_nonTrig_V1_cff',
+        'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring15_25ns_Trig_V1_cff',
+        'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring16_GeneralPurpose_V1_cff',
+        'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring16_HZZ_V1_cff',
+                 ]
+for idmod in my_id_modules:
+    setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
 
 # Load Ntuple producer cff
 process.load("CMS3.NtupleMaker.cms3CoreSequences_cff")
@@ -302,7 +300,9 @@ process.Timing = cms.Service("Timing",
 
 process.GlobalTag.globaltag = "80X_mcRun2_asymptotic_2016_TrancheIV_v8"
 process.out.fileName = cms.untracked.string('ntuple.root') # output
-process.source.fileNames = cms.untracked.vstring(['/store/mc/RunIISummer16MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/D6D620EF-73BE-E611-8BFB-B499BAA67780.root']) # input
+# process.source.fileNames = cms.untracked.vstring(['/store/mc/RunIISummer16MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/D6D620EF-73BE-E611-8BFB-B499BAA67780.root'])
+# process.source.fileNames = cms.untracked.vstring(['/store/mc/RunIISpring16MiniAODv2/SMS-T2tt_mStop-400to1200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/10000/A00F4240-1B34-E611-9249-842B2B7680C9.root'])
+process.source.fileNames = cms.untracked.vstring(['/store/mc/RunIISummer16MiniAODv2/TTJets_SingleLeptFromT_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1/50000/B88FC99E-81BD-E611-90AB-20CF3019DF17.root'])
 process.eventMaker.CMS3tag = cms.string('CMS4_V08-00-06') # doesn't affect ntupling, only for bookkeeping later on
 process.eventMaker.datasetName = cms.string('ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM') # doesn't affect ntupling, only for bookkeeping later on
 process.maxEvents.input = cms.untracked.int32(3000) # max number of events; note that crab overrides this to -1

@@ -201,14 +201,14 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
     LorentzVector sd_pup1;
     float puppi_softdropMass = -999;
 
-    auto const & sdSubjetsPuppi = pfjet_it->subjets("SoftDropPuppi");
-    int count_pup = 0;
-    for ( auto const & it : sdSubjetsPuppi ) {
-        if (count_pup==0) sd_pup0 = LorentzVector(it->p4());
-        if (count_pup==1) sd_pup1 = LorentzVector(it->p4());
-        count_pup++;
-    }
-    if (count_pup > 1) puppi_softdropMass = (sd_pup0+sd_pup1).M();
+    // auto const & sdSubjetsPuppi = pfjet_it->subjets("SoftDropPuppi");
+    // int count_pup = 0;
+    // for ( auto const & it : sdSubjetsPuppi ) {
+    //     if (count_pup==0) sd_pup0 = LorentzVector(it->p4());
+    //     if (count_pup==1) sd_pup1 = LorentzVector(it->p4());
+    //     count_pup++;
+    // }
+    // if (count_pup > 1) puppi_softdropMass = (sd_pup0+sd_pup1).M();
 
     ak8jets_nJettinessTau1           ->push_back( nJettinessTau1                       );
     ak8jets_nJettinessTau2           ->push_back( nJettinessTau2                       );
