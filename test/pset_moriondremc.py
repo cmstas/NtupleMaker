@@ -1,22 +1,46 @@
 import FWCore.ParameterSet.Config as cms
-from Configuration.EventContent.EventContent_cff   import *
 
-
-is_data = False
-is_fastsim = False
-is_relval = False
-
-
-do_deepbtag = True
-
-
+# https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideAboutPythonConfigFile#VarParsing_Documentation
+# Allow command line options like
+#     cmsRun main_pset.py data=True prompt=True   # prompt data
+#     cmsRun main_pset.py data=False               # MC
+#     cmsRun main_pset.py fastsim=True             # fastsim
+import FWCore.ParameterSet.VarParsing as VarParsing
+opts = VarParsing.VarParsing('python')
+vpbool = VarParsing.VarParsing.varType.bool
+opts.register('data'    , False , mytype=vpbool)
+opts.register('prompt'  , False , mytype=vpbool)
+opts.register('fastsim' , False , mytype=vpbool)
+opts.register('relval'  , False , mytype=vpbool)
+opts.register('triginfo'  , False , mytype=vpbool)
+opts.parseArguments()
+# be smart. if fastsim, it's obviously MC
+# if it's MC, it's obviously not prompt
+if opts.fastsim: opts.data = False
+if not opts.data: opts.prompt = False
+print """PSet is assuming:
+   data?     : {}
+   prompt?   : {}
+   fastsim?  : {}
+   relval?   : {}
+   triginfo? : {}
+""".format(bool(opts.data), bool(opts.prompt), bool(opts.fastsim), bool(opts.relval), bool(opts.triginfo))
 
 import CMS3.NtupleMaker.configProcessName as configProcessName
 configProcessName.name="PAT"
-configProcessName.name2="RECO"
-configProcessName.isFastSim=is_fastsim
+if opts.data and opts.prompt:
+    configProcessName.name="RECO"
 
-if is_relval: configProcessName.name="RECO"
+configProcessName.name2="RECO"
+
+if opts.relval:
+    configProcessName.name="reRECO"
+    configProcessName.name2="reRECO"
+
+if opts.fastsim:
+    configProcessName.fastSimName="HLT"
+    configProcessName.name2=configProcessName.fastSimName
+configProcessName.isFastSim=opts.fastsim
 
 # CMS3
 process = cms.Process("CMS3")
@@ -27,6 +51,8 @@ process.configurationMetadata = cms.untracked.PSet(
         annotation = cms.untracked.string('CMS3'),
         name       = cms.untracked.string('CMS3 test configuration')
 )
+
+from Configuration.EventContent.EventContent_cff   import *
 
 # load event level configurations
 process.load('Configuration/EventContent/EventContent_cff')
@@ -46,10 +72,7 @@ process.options = cms.untracked.PSet( allowUnscheduled = cms.untracked.bool(True
 
 process.out = cms.OutputModule("PoolOutputModule",
                                fileName     = cms.untracked.string('ntuple.root'),
-                               # fileName     = cms.untracked.string('ntuple2.root'),
-                               dropMetaData = cms.untracked.string("NONE"),
-                               # basketSize = cms.untracked.int32(16384*150)
-                               # basketSize = cms.untracked.int32(16384*10)
+                               dropMetaData = cms.untracked.string("ALL"),
                                basketSize = cms.untracked.int32(16384*23)
 )
 
@@ -62,8 +85,6 @@ from JetMETCorrections.Configuration.CorrectedJetProducersDefault_cff import *
 from JetMETCorrections.Configuration.CorrectedJetProducers_cff import *
 from JetMETCorrections.Configuration.CorrectedJetProducersAllAlgos_cff import *
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
-# from RecoJets.JetProducers.fixedGridRhoProducerFastjet_cfi import *
-# process.fixedGridRhoFastjetAll = fixedGridRhoFastjetAll.clone(pfCandidatesTag = 'packedPFCandidates')
 
 #Electron Identification for PHYS 14
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *  
@@ -74,8 +95,6 @@ process.egmGsfElectronIDs.physicsObjectSrc = cms.InputTag('slimmedElectrons',"",
 process.electronMVAValueMapProducer.srcMiniAOD = cms.InputTag('slimmedElectrons',"",configProcessName.name)
 process.egmGsfElectronIDSequence = cms.Sequence(process.electronMVAValueMapProducer * process.egmGsfElectronIDs)
 my_id_modules = [
-        # 'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Spring15_25ns_V1_cff',
-        # 'RecoEgamma.ElectronIdentification.Identification.heepElectronID_HEEPV60_cff',
         'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring15_25ns_nonTrig_V1_cff',
         'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring15_25ns_Trig_V1_cff',
         'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring16_GeneralPurpose_V1_cff',
@@ -84,12 +103,38 @@ my_id_modules = [
 for idmod in my_id_modules:
     setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
 
+### -------------------------------------------------------------------
+### Setup puppi AK8 jets as input to the DeepAK8 tagger with puppi
+### -------------------------------------------------------------------
+# ---------------------------------------------------------
+# set up TransientTrackBuilder
+process.TransientTrackBuilderESProducer = cms.ESProducer("TransientTrackBuilderESProducer",
+    ComponentName=cms.string('TransientTrackBuilder')
+)
+# ---------------------------------------------------------
+# recluster Puppi jets
+bTagDiscriminators = [
+    'pfCombinedInclusiveSecondaryVertexV2BJetTags',
+    'pfBoostedDoubleSecondaryVertexAK8BJetTags'
+]
+JETCorrLevels = ['L2Relative', 'L3Absolute']
+
+from JMEAnalysis.JetToolbox.jetToolbox_cff import jetToolbox
+jetToolbox(process, 'ak8', 'jetSequence', 'out', PUMethod='Puppi', JETCorrPayload='AK8PFPuppi', JETCorrLevels=JETCorrLevels, miniAOD=True, runOnMC=True,
+           Cut='pt > 170.0 && abs(rapidity()) < 2.4', addNsub=True, maxTau=3,
+           addSoftDrop=True, addSoftDropSubjets=True, subJETCorrPayload='AK4PFPuppi', subJETCorrLevels=JETCorrLevels,
+           bTagDiscriminators=bTagDiscriminators)
+# srcJets = cms.untracked.InputTag('selectedPatJetsAK8PFPuppi')
+# srcSubjets = cms.untracked.InputTag('selectedPatJetsAK8PFPuppiSoftDropPacked')
+# ---------------------------------------------------------
+
 # Load Ntuple producer cff
 process.load("CMS3.NtupleMaker.cms3CoreSequences_cff")
-if not is_data: process.load("CMS3.NtupleMaker.cms3GENSequence_cff")
+if not opts.data: process.load("CMS3.NtupleMaker.cms3GENSequence_cff")
 process.load("CMS3.NtupleMaker.cms3PFSequence_cff")
-process.eventMaker.isData                        = cms.bool(is_data)
+process.eventMaker.isData = cms.bool(opts.data)
     
+do_deepbtag = True
 if do_deepbtag:
     from PhysicsTools.PatAlgos.tools.jetTools import *
     deep_discriminators = ["deepFlavourJetTags:probudsg", "deepFlavourJetTags:probb", "deepFlavourJetTags:probc", "deepFlavourJetTags:probbb", "deepFlavourJetTags:probcc" ]
@@ -115,36 +160,23 @@ if do_deepbtag:
 process.hypDilepMaker.TightLepton_PtCut  = cms.double(10.0)
 process.hypDilepMaker.LooseLepton_PtCut  = cms.double(10.0)
 
-#Options for Input
+# Options for Input
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(
-                                # 'file:/hadoop/cms/phedex/store/mc/RunIISpring15MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/74X_mcRun2_asymptotic_v2-v1/60000/7AEAFCAD-266F-E511-8A2A-001E67A3F3DF.root',
-                                # 'root://cmsxrootd.fnal.gov//store/mc/RunIIFall15MiniAODv1/WWTo2L2Nu_13TeV-powheg/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/50000/0E47EC63-7B9D-E511-B714-B083FED426E5.root
-#         'file:/hadoop/cms/phedex/store/mc/RunIISpring16MiniAODv1/ttbb_4FS_ckm_amcatnlo_madspin_pythia8/MINIAODSIM/PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/60000/F4EA8D09-9002-E611-9D1B-1CC1DE19274E.root',
-#                                '/store/mc/RunIISpring16MiniAODv2/WZTo3LNu_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PUSpring16_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/60000/D63C4E53-D91B-E611-AC83-FA163E5810F7.root',
-                                # 'file:RelValProdQCD_Pt_3000_3500_13.root'
-                                # 'file:/home/users/namin/2017/slimming/CMSSW_8_0_26_patch1/src/CMS3/NtupleMaker/test/A8B84A69-C1D7-E611-831F-5065F382B2D1.root',
-                                # 'file:/home/users/namin/2017/slimming/CMSSW_8_0_26_patch1/src/CMS3/NtupleMaker/test/A8B84A69-C1D7-E611-831F-5065F382B2D1.root',
-                                # 'file:/home/users/namin/2017/slimming/CMSSW_8_0_26_patch1/src/CMS3/NtupleMaker/test',
                                 'file:/home/users/namin/2017/slimming/CMSSW_8_0_26_patch1/src/CMS3/NtupleMaker/test/TTJets_HT-1200to2500.root',
-                                # 'file:DataDoubleEG2016C.root',
-                                # 'file:QCD_HT200to300.root',
-                                # 'file:20457CC1-74D7-E611-A445-24BE05CE2E81.root',
                             )
 )
 process.source.noEventSort = cms.untracked.bool( True )
 
-#Max Events
-# process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(50) )
-# process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(3000) )
+# Max Events
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 
-#Run corrected MET maker
+# Run corrected MET maker
 
-#configurable options =======================================================================
+# ====================== configurable options ======================
 usePrivateSQlite=False #use external JECs (sqlite file)
-applyResiduals=is_data #application of residual corrections. Have to be set to True once the 13 TeV residual corrections are available. False to be kept meanwhile. Can be kept to False later for private tests or for analysis checks and developments (not the official recommendation!).
+applyResiduals=opts.data #application of residual corrections. Have to be set to True once the 13 TeV residual corrections are available. False to be kept meanwhile. Can be kept to False later for private tests or for analysis checks and developments (not the official recommendation!).
 #===================================================================
 
 if usePrivateSQlite:
@@ -169,18 +201,18 @@ if usePrivateSQlite:
     process.es_prefer_jec = cms.ESPrefer("PoolDBESSource",'jec')
 
 ### =================================================================================
-#jets are rebuilt from those candidates by the tools, no need to do anything else
+### jets are rebuilt from those candidates by the tools, no need to do anything else
 ### =================================================================================
 
 process.outpath = cms.EndPath(process.out)
 process.out.outputCommands = cms.untracked.vstring( 'drop *' )
 
-if not is_data:
+if not opts.data:
     from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
     #default configuration for miniAOD reprocessing, change the isData flag to run on data
     #for a full met computation, remove the pfCandColl input
     runMetCorAndUncFromMiniAOD(process,
-                               isData=is_data,
+                               isData=opts.data,
                                )
 
 process.out.outputCommands = cms.untracked.vstring( 'drop *' )
@@ -199,33 +231,6 @@ if not applyResiduals:
 ### ------------------------------------------------------------------
 
 # end Run corrected MET maker
-
-
-### -------------------------------------------------------------------
-### DeepAK8 tagger with puppi
-### -------------------------------------------------------------------
-
-# ---------------------------------------------------------
-# set up TransientTrackBuilder
-process.TransientTrackBuilderESProducer = cms.ESProducer("TransientTrackBuilderESProducer",
-    ComponentName=cms.string('TransientTrackBuilder')
-)
-# ---------------------------------------------------------
-# recluster Puppi jets
-bTagDiscriminators = [
-    'pfCombinedInclusiveSecondaryVertexV2BJetTags',
-    'pfBoostedDoubleSecondaryVertexAK8BJetTags'
-]
-JETCorrLevels = ['L2Relative', 'L3Absolute']
-
-from JMEAnalysis.JetToolbox.jetToolbox_cff import jetToolbox
-jetToolbox(process, 'ak8', 'jetSequence', 'out', PUMethod='Puppi', JETCorrPayload='AK8PFPuppi', JETCorrLevels=JETCorrLevels, miniAOD=True, runOnMC=True,
-           Cut='pt > 170.0 && abs(rapidity()) < 2.4', addNsub=True, maxTau=3,
-           addSoftDrop=True, addSoftDropSubjets=True, subJETCorrPayload='AK4PFPuppi', subJETCorrLevels=JETCorrLevels,
-           bTagDiscriminators=bTagDiscriminators)
-# srcJets = cms.untracked.InputTag('selectedPatJetsAK8PFPuppi')
-# srcSubjets = cms.untracked.InputTag('selectedPatJetsAK8PFPuppiSoftDropPacked')
-# ---------------------------------------------------------
 
 # process.p = cms.Path( 
 #   process.metFilterMaker *
@@ -253,6 +258,8 @@ jetToolbox(process, 'ak8', 'jetSequence', 'out', PUMethod='Puppi', JETCorrPayloa
 #   process.hypDilepMaker
 # )
 
+if opts.fastsim:
+    process.sParmMaker.vsparms = cms.untracked.vstring("mStop", "mLSP")
 
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
@@ -285,3 +292,17 @@ process.Timing = cms.Service("Timing",
 # process.eventMaker.CMS3tag = cms.string('V08-00-18')
 # process.eventMaker.datasetName = cms.string('/DoubleEG/Run2016C-03Feb2017-v1/MINIAOD')
 # process.maxEvents.input = cms.untracked.int32(3000)
+
+# process.GlobalTag.globaltag = "80X_mcRun2_asymptotic_2016_miniAODv2_v0"
+# process.out.fileName = cms.untracked.string('ntuple.root') # output
+# process.source.fileNames = cms.untracked.vstring(['/store/mc/RunIISpring16MiniAODv2/SMS-T2tt_dM-10to80_genHT-160_genMET-80_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/80000/5EADC1A2-664B-E611-A66D-28924A33AF26.root']) # input
+# process.eventMaker.CMS3tag = cms.string('CMS4_V00-00-02_test') # doesn't affect ntupling, only for bookkeeping later on
+# process.eventMaker.datasetName = cms.string('/SMS-T2tt_dM-10to80_genHT-160_genMET-80_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv2-PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/MINIAODSIM') # doesn't affect ntupling, only for bookkeeping later on
+# process.maxEvents.input = cms.untracked.int32(3000) # max number of events; note that crab overrides this to -1
+
+process.GlobalTag.globaltag = "80X_mcRun2_asymptotic_2016_TrancheIV_v8"
+process.out.fileName = cms.untracked.string('ntuple.root') # output
+process.source.fileNames = cms.untracked.vstring(['/store/mc/RunIISummer16MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/D6D620EF-73BE-E611-8BFB-B499BAA67780.root']) # input
+process.eventMaker.CMS3tag = cms.string('CMS4_V08-00-06') # doesn't affect ntupling, only for bookkeeping later on
+process.eventMaker.datasetName = cms.string('ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM') # doesn't affect ntupling, only for bookkeeping later on
+process.maxEvents.input = cms.untracked.int32(3000) # max number of events; note that crab overrides this to -1

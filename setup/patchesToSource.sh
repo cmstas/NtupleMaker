@@ -98,18 +98,21 @@ cd $CMSSW_BASE/src
 #  DeepAK8 fat jet tagger
 # #######################
 cd $CMSSW_BASE/src
+# setup JetToolBox first since Puppi jet needs it
+# https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetToolbox
+git clone git@github.com:cms-jet/JetToolbox.git JMEAnalysis/JetToolbox -b jetToolbox_80X_V3
+
+cd $CMSSW_BASE/src
 # cp -r ~namin/2018/deepak8/slimmed/NNKit .
 # check out the package - note, need ssh key in gitlab.cern.ch
 # because this is top secret code that needs to be password protected apparently
 # and thus, the user must either configure ssh keys or manually type their password.
 # the latter ruins the whole "run this install script, get a coffee, use the ntuplemaker" workflow.
-git clone ssh://git@gitlab.cern.ch:7999/DeepAK8/NNKit.git
+git clone ssh://git@gitlab.cern.ch:7999/DeepAK8/NNKit.git -b puppi
 # setup mxnet library
 cp NNKit/misc/*.xml $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected
 scram setup openblas
-scram setup mxnet
-rm $CMSSW_BASE/external/$SCRAM_ARCH/lib/libmxnet.so
-cp NNKit/misc/lib/libmxnet.so $CMSSW_BASE/external/$SCRAM_ARCH/lib/libmxnet.so
+scram setup mxnet_predict
 # copy json files to test directory (or wherever you are doing cmsRun)
 cp NNKit/data/*.{json,params} $CMSSW_BASE/src/CMS3/NtupleMaker/test/
 # #######################

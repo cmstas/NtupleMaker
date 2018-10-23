@@ -34,6 +34,8 @@ Implementation:
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 
 #include "NNKit/FatJetNN/interface/FatJetNN.h"
+#include "NNKit/FatJetNN/interface/FatJetNNDecorrelator.h"
+#include "NNKit/FatJetNN/interface/FatJetNNHelper.h"
 
 //
 // class decleration
@@ -54,6 +56,7 @@ private:
   deepntuples::FatJetNN* fatjetNN_;
 
   edm::EDGetTokenT<edm::View<pat::Jet> > pfJetsToken;
+  edm::EDGetTokenT<pat::JetCollection> subJetToken;
   edm::InputTag pfCandidatesTag_;
   double         pfJetPtCut_;
   std::string aliasprefix_;

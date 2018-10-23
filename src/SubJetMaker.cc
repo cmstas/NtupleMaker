@@ -21,12 +21,12 @@ SubJetMaker::SubJetMaker(const edm::ParameterSet& iConfig){
 
   // initialize the FatJetNN class in the constructor
   auto cc = consumesCollector();
+  // use the full path or put the file in the current working directory <-- doing the latter
   fatjetNN_ = new deepntuples::FatJetNN(iConfig, cc);
-  // load json for input variable transformation
-  fatjetNN_->load_json("preprocessing.json"); // use the full path or put the file in the current working directory (i.e., where you run cmsRun)
-  // load DNN model and parameter files
-  fatjetNN_->load_model("resnet-symbol.json", "resnet.params"); // use the full path or put the file in the current working directory (i.e., where you run cmsRun)
-
+  // load json for input variable transformation and DNN model and parameter files
+  string nnparampath = iConfig.getUntrackedParameter<std::string>("nndatapath", "NNKit/data/ak8");
+  fatjetNN_->load_json(edm::FileInPath(nnparampath+"/full/preprocessing.json").fullPath());
+  fatjetNN_->load_model(edm::FileInPath(nnparampath+"/full/resnet-symbol.json").fullPath(), edm::FileInPath(nnparampath+"/full/resnet.params").fullPath());
 
   // product of this EDProducer
   produces<vector<LorentzVector> > ( "ak8jetsp4"                               ).setBranchAlias( "ak8jets_p4"                        );
@@ -66,8 +66,11 @@ SubJetMaker::SubJetMaker(const edm::ParameterSet& iConfig){
   produces<vector<float> >         ( "ak8jetsdeeprawdischbb"                   ).setBranchAlias( "ak8jets_deep_rawdisc_hbb"          );
   produces<vector<float> >         ( "ak8jetsdeeprawdisch4q"                   ).setBranchAlias( "ak8jets_deep_rawdisc_h4q"          );
 
-  pfJetsToken = consumes<edm::View<pat::Jet> >(iConfig.getParameter<edm::InputTag>("pfJetsInputTag"));
-  pfJetPtCut_                       = iConfig.getParameter<double>     ( "pfJetPtCut"                       );
+  // pfJetsToken = consumes<edm::View<pat::Jet> >(iConfig.getParameter<edm::InputTag>("pfJetsInputTag"));
+  // pfJetPtCut_                       = iConfig.getParameter<double>     ( "pfJetPtCut"                       );
+  pfJetsToken = consumes<edm::View<pat::Jet> >(iConfig.getUntrackedParameter<edm::InputTag>("pfJetsInputTag", edm::InputTag("slimmedJetsAK8")));
+  subJetToken = consumes<pat::JetCollection>(iConfig.getUntrackedParameter<edm::InputTag>("subJetsInputTag", edm::InputTag("slimmedJetsAK8PFPuppiSoftDropPacked")));
+  pfJetPtCut_ = iConfig.getParameter<double> ( "pfJetPtCut" );
 }
 
 // Destructor
@@ -126,6 +129,9 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   Handle<View<pat::Jet> > pfJetsHandle;
   iEvent.getByToken(pfJetsToken, pfJetsHandle);
 
+  Handle<pat::JetCollection> sdjetsHandle;
+  iEvent.getByToken(subJetToken, sdjetsHandle);
+
   fatjetNN_->readEvent(iEvent, iSetup);
 
   for(View<pat::Jet>::const_iterator pfjet_it = pfJetsHandle->begin(); pfjet_it != pfJetsHandle->end(); pfjet_it++){
@@ -143,22 +149,26 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
     pfjets_area                      ->push_back( pfjet_it->jetArea()                  );
     pfjets_partonFlavour             ->push_back( pfjet_it->partonFlavour()            );
 
-    fatjetNN_->predict(*pfjet_it);
+    deepntuples::JetHelper jet_helper( &(*pfjet_it) );
+    jet_helper.setSubjets(*sdjetsHandle, 0.8);
 
-    ak8jets_deep_bindisc_top ->push_back( fatjetNN_->get_binarized_score_top() );
-    ak8jets_deep_bindisc_w   ->push_back( fatjetNN_->get_binarized_score_w()   );
-    ak8jets_deep_bindisc_z   ->push_back( fatjetNN_->get_binarized_score_z()   );
-    ak8jets_deep_bindisc_zbb ->push_back( fatjetNN_->get_binarized_score_zbb() );
-    ak8jets_deep_bindisc_hbb ->push_back( fatjetNN_->get_binarized_score_hbb() );
-    ak8jets_deep_bindisc_h4q ->push_back( fatjetNN_->get_binarized_score_h4q() );
+    const auto& nnpreds = fatjetNN_->predict( jet_helper );
+    deepntuples::FatJetNNHelper nnhelper( nnpreds );
 
-    ak8jets_deep_rawdisc_qcd ->push_back( fatjetNN_->get_raw_score_qcd()       );
-    ak8jets_deep_rawdisc_top ->push_back( fatjetNN_->get_raw_score_top()       );
-    ak8jets_deep_rawdisc_w   ->push_back( fatjetNN_->get_raw_score_w()         );
-    ak8jets_deep_rawdisc_z   ->push_back( fatjetNN_->get_raw_score_z()         );
-    ak8jets_deep_rawdisc_zbb ->push_back( fatjetNN_->get_raw_score_zbb()       );
-    ak8jets_deep_rawdisc_hbb ->push_back( fatjetNN_->get_raw_score_hbb()       );
-    ak8jets_deep_rawdisc_h4q ->push_back( fatjetNN_->get_raw_score_h4q()       );
+    ak8jets_deep_rawdisc_qcd ->push_back( nnhelper.get_raw_score_qcd()       );
+    ak8jets_deep_rawdisc_top ->push_back( nnhelper.get_raw_score_top()       );
+    ak8jets_deep_rawdisc_w   ->push_back( nnhelper.get_raw_score_w()         );
+    ak8jets_deep_rawdisc_z   ->push_back( nnhelper.get_raw_score_z()         );
+    ak8jets_deep_rawdisc_zbb ->push_back( nnhelper.get_raw_score_zbb()       );
+    ak8jets_deep_rawdisc_hbb ->push_back( nnhelper.get_raw_score_hbb()       );
+    ak8jets_deep_rawdisc_h4q ->push_back( nnhelper.get_raw_score_h4q()       );
+
+    ak8jets_deep_bindisc_top ->push_back( nnhelper.get_binarized_score_top() );
+    ak8jets_deep_bindisc_w   ->push_back( nnhelper.get_binarized_score_w()   );
+    ak8jets_deep_bindisc_z   ->push_back( nnhelper.get_binarized_score_z()   );
+    ak8jets_deep_bindisc_zbb ->push_back( nnhelper.get_binarized_score_zbb() );
+    ak8jets_deep_bindisc_hbb ->push_back( nnhelper.get_binarized_score_hbb() );
+    ak8jets_deep_bindisc_h4q ->push_back( nnhelper.get_binarized_score_h4q() );
 
     float nJettinessTau1 = -999, nJettinessTau2 = -999, nJettinessTau3 = -999;
     // float topMass = -999, minMass = -999, nSubJets = -999;

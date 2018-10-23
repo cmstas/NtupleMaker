@@ -19,7 +19,9 @@ import FWCore.ParameterSet.Config as cms
 
 subJetMaker = cms.EDProducer("SubJetMaker",
   #pfJetsInputTag                   = cms.InputTag("prunedUncorrectedCMS2Jets", "pfjet"),
-  pfJetsInputTag                   = cms.InputTag("slimmedJetsAK8"),
+  # pfJetsInputTag                   = cms.InputTag("slimmedJetsAK8"),
+  pfJetsInputTag                   = cms.untracked.InputTag("selectedPatJetsAK8PFPuppi"),
+  subJetsInputTag                  = cms.untracked.InputTag("selectedPatJetsAK8PFPuppiSoftDropPacked"),
   # pfJetsInputTag                   = cms.InputTag("patJetsAK8PFCHS"),
   # pfJetsInputTag                   = cms.InputTag("ak8PFJetsCHS"),
   #pfCandidatesTag                  = cms.InputTag("particleFlow"),

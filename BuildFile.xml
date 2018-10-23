@@ -27,6 +27,7 @@
 <use   name="CMS3/Dictionaries"/>
 <use   name="EgammaAnalysis/ElectronTools"/>
 <use   name="PhysicsTools/NanoAOD"/>
+<use   name="NNKit/CommonTools"/>
 <use   name="NNKit/FatJetNN"/>
 <use   name="root"/>
 <use   name="clhep"/>
