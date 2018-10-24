@@ -51,6 +51,9 @@ SubJetMaker::SubJetMaker(const edm::ParameterSet& iConfig){
   produces<vector<LorentzVector> > ( "ak8jetssoftdropPuppiSubjet2"             ).setBranchAlias( "ak8jets_softdropPuppiSubjet2"      );
   produces<vector<float> >         ( "ak8jetspuppisoftdropMass"                ).setBranchAlias( "ak8jets_puppi_softdropMass"        );
 
+  produces<vector<TString> >       ( "ak8jetsbDiscriminatorNames"              ).setBranchAlias( "ak8jets_bDiscriminatorNames"       );
+  produces<vector<vector<float>> > ( "ak8jetsbDiscriminators"                  ).setBranchAlias( "ak8jets_bDiscriminators"           );
+
   // deepAK8 tagging branches
   produces<vector<float> >         ( "ak8jetsdeepbindisctop"                   ).setBranchAlias( "ak8jets_deep_bindisc_top"          );
   produces<vector<float> >         ( "ak8jetsdeepbindiscw"                     ).setBranchAlias( "ak8jets_deep_bindisc_w"            );
@@ -112,6 +115,9 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   unique_ptr<vector<LorentzVector> > ak8jets_softdropPuppiSubjet2     (new vector<LorentzVector>  );
   unique_ptr<vector<float> >         ak8jets_puppi_softdropMass       (new vector<float>          );
 
+  unique_ptr<vector<TString> >       ak8jets_bDiscriminatorNames      (new vector<TString>        );
+  unique_ptr<vector<vector<float>> > ak8jets_bDiscriminators          (new vector<vector<float> > );
+
   unique_ptr<vector<float> > ak8jets_deep_bindisc_top (new vector<float>);
   unique_ptr<vector<float> > ak8jets_deep_bindisc_w   (new vector<float>);
   unique_ptr<vector<float> > ak8jets_deep_bindisc_z   (new vector<float>);
@@ -170,24 +176,29 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
     ak8jets_deep_bindisc_hbb ->push_back( nnhelper.get_binarized_score_hbb() );
     ak8jets_deep_bindisc_h4q ->push_back( nnhelper.get_binarized_score_h4q() );
 
+    const vector<pair<string,float>> bDiscriminatorPairs = pfjet_it->getPairDiscri();
+    vector<float> bDiscriminatorPerjet;
+    for (auto& ipair : bDiscriminatorPairs) {
+      if (pfjet_it == pfJetsHandle->begin())
+        ak8jets_bDiscriminatorNames->push_back( ipair.first );
+      bDiscriminatorPerjet.push_back( ipair.second );
+    }
+    ak8jets_bDiscriminators->push_back(bDiscriminatorPerjet);
+
     float nJettinessTau1 = -999, nJettinessTau2 = -999, nJettinessTau3 = -999;
     // float topMass = -999, minMass = -999, nSubJets = -999;
     float prunedMass = -999, softdropMass = -999;
     float puppi_pt = -999, puppi_mass = -999, puppi_eta = -999, puppi_phi = -999;
     float puppi_nJettinessTau1 = -999, puppi_nJettinessTau2 = -999, puppi_nJettinessTau3 = -999;
     // reco::CATopJetTagInfo const * tagInfo =  dynamic_cast<reco::CATopJetTagInfo const *>( pfjet_it->tagInfo("caTop"));
-    if ( pfjet_it->hasUserFloat("NjettinessAK8:tau1") ) nJettinessTau1 = pfjet_it->userFloat("NjettinessAK8:tau1");
-    if ( pfjet_it->hasUserFloat("NjettinessAK8:tau2") ) nJettinessTau2 = pfjet_it->userFloat("NjettinessAK8:tau2");
-    if ( pfjet_it->hasUserFloat("NjettinessAK8:tau3") ) nJettinessTau3 = pfjet_it->userFloat("NjettinessAK8:tau3");
-    // some values dropped. see https://indico.cern.ch/event/530683/contributions/2166094/attachments/1271776/1884873/80XminiAODv2.pdf
-    // if (tagInfo) topMass = tagInfo->properties().topMass; // dropped
-    // if (tagInfo) minMass = tagInfo->properties().minMass; // dropped
-    // if (tagInfo) nSubJets = tagInfo->properties().nSubJets; // dropped
-    if ( pfjet_it->hasUserFloat("ak8PFJetsCHSPrunedMass") ) prunedMass = pfjet_it->userFloat("ak8PFJetsCHSPrunedMass");
-    // if ( pfjet_it->hasUserFloat("ak8PFJetsCHSTrimmedMass") ) trimmedMass = pfjet_it->userFloat("ak8PFJetsCHSTrimmedMass"); // dropped
-    // if ( pfjet_it->hasUserFloat("ak8PFJetsCHSFilteredMass") ) filteredMass = pfjet_it->userFloat("ak8PFJetsCHSFilteredMass"); // dropped
-    if ( pfjet_it->hasUserFloat("ak8PFJetsCHSSoftDropMass") ) softdropMass = pfjet_it->userFloat("ak8PFJetsCHSSoftDropMass");
 
+    // Things that exist in the puppi jets
+    if ( pfjet_it->hasUserFloat("NjettinessAK8Puppi:tau1") ) nJettinessTau1 = pfjet_it->userFloat("NjettinessAK8Puppi:tau1");
+    if ( pfjet_it->hasUserFloat("NjettinessAK8Puppi:tau2") ) nJettinessTau2 = pfjet_it->userFloat("NjettinessAK8Puppi:tau2");
+    if ( pfjet_it->hasUserFloat("NjettinessAK8Puppi:tau3") ) nJettinessTau3 = pfjet_it->userFloat("NjettinessAK8Puppi:tau3");
+    if ( pfjet_it->hasUserFloat("ak8PFJetsPuppiSoftDropMass") ) softdropMass = pfjet_it->userFloat("ak8PFJetsPuppiSoftDropMass");
+
+    // some values dropped. see https://indico.cern.ch/event/530683/contributions/2166094/attachments/1271776/1884873/80XminiAODv2.pdf
     if ( pfjet_it->hasUserFloat("ak8PFJetsPuppiValueMap:pt") ) puppi_pt = pfjet_it->userFloat("ak8PFJetsPuppiValueMap:pt");
     if ( pfjet_it->hasUserFloat("ak8PFJetsPuppiValueMap:mass") ) puppi_mass = pfjet_it->userFloat("ak8PFJetsPuppiValueMap:mass");
     if ( pfjet_it->hasUserFloat("ak8PFJetsPuppiValueMap:eta") ) puppi_eta = pfjet_it->userFloat("ak8PFJetsPuppiValueMap:eta");
@@ -202,23 +213,24 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
     float puppi_softdropMass = -999;
 
     // auto const & sdSubjetsPuppi = pfjet_it->subjets("SoftDropPuppi");
-    // int count_pup = 0;
-    // for ( auto const & it : sdSubjetsPuppi ) {
-    //     if (count_pup==0) sd_pup0 = LorentzVector(it->p4());
-    //     if (count_pup==1) sd_pup1 = LorentzVector(it->p4());
-    //     count_pup++;
-    // }
-    // if (count_pup > 1) puppi_softdropMass = (sd_pup0+sd_pup1).M();
+    int count_pup = 0;
+    for (auto sj = sdjetsHandle->begin(); sj != sdjetsHandle->end(); sj++ ) {
+      if (reco::deltaR(*sj, *pfjet_it) > 0.8) continue;
+      for ( size_t ida = 0; ida < sj->numberOfDaughters(); ++ida ) {
+        auto candPtr =  sj->daughterPtr(ida);
+        // subjets_.push_back(&(*edm::Ptr<pat::Jet>(candPtr)));
+        if (count_pup==0) sd_pup0 = LorentzVector(candPtr->p4());
+        if (count_pup==1) sd_pup1 = LorentzVector(candPtr->p4());
+        count_pup++;
+      }
+      break;
+    }
+    if (count_pup > 1) puppi_softdropMass = (sd_pup0+sd_pup1).M();
 
     ak8jets_nJettinessTau1           ->push_back( nJettinessTau1                       );
     ak8jets_nJettinessTau2           ->push_back( nJettinessTau2                       );
     ak8jets_nJettinessTau3           ->push_back( nJettinessTau3                       );
-    // ak8jets_topMass                  ->push_back( topMass                              );
-    // ak8jets_minMass                  ->push_back( minMass                              );
-    // ak8jets_nSubJets                 ->push_back( nSubJets                             );
     ak8jets_prunedMass               ->push_back( prunedMass                           );
-    // ak8jets_trimmedMass              ->push_back( trimmedMass                          );
-    // ak8jets_filteredMass             ->push_back( filteredMass                         );
     ak8jets_softdropMass             ->push_back( softdropMass                         );
     ak8jets_puppi_nJettinessTau1     ->push_back( puppi_nJettinessTau1                 );
     ak8jets_puppi_nJettinessTau2     ->push_back( puppi_nJettinessTau2                 );
@@ -255,18 +267,23 @@ void SubJetMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   iEvent.put(std::move(ak8jets_nJettinessTau1           ), "ak8jetsnJettinessTau1"            );
   iEvent.put(std::move(ak8jets_nJettinessTau2           ), "ak8jetsnJettinessTau2"            );
   iEvent.put(std::move(ak8jets_nJettinessTau3           ), "ak8jetsnJettinessTau3"            );
-  iEvent.put(std::move(ak8jets_prunedMass               ), "ak8jetsprunedMass"            );
-  iEvent.put(std::move(ak8jets_softdropMass             ), "ak8jetssoftdropMass"          );
-  iEvent.put(std::move(ak8jets_puppi_nJettinessTau1     ), "ak8jetspuppinJettinessTau1"   );
-  iEvent.put(std::move(ak8jets_puppi_nJettinessTau2     ), "ak8jetspuppinJettinessTau2"   );
-  iEvent.put(std::move(ak8jets_puppi_nJettinessTau3     ), "ak8jetspuppinJettinessTau3"   );
-  iEvent.put(std::move(ak8jets_puppi_pt                 ), "ak8jetspuppipt"               );
-  iEvent.put(std::move(ak8jets_puppi_mass               ), "ak8jetspuppimass"             );
-  iEvent.put(std::move(ak8jets_puppi_eta                ), "ak8jetspuppieta"              );
-  iEvent.put(std::move(ak8jets_puppi_phi                ), "ak8jetspuppiphi"              );
+  iEvent.put(std::move(ak8jets_softdropMass             ), "ak8jetssoftdropMass"              );
+
+  // iEvent.put(std::move(ak8jets_prunedMass               ), "ak8jetsprunedMass"            );
+  // iEvent.put(std::move(ak8jets_puppi_nJettinessTau1     ), "ak8jetspuppinJettinessTau1"   );
+  // iEvent.put(std::move(ak8jets_puppi_nJettinessTau2     ), "ak8jetspuppinJettinessTau2"   );
+  // iEvent.put(std::move(ak8jets_puppi_nJettinessTau3     ), "ak8jetspuppinJettinessTau3"   );
+  // iEvent.put(std::move(ak8jets_puppi_pt                 ), "ak8jetspuppipt"               );
+  // iEvent.put(std::move(ak8jets_puppi_mass               ), "ak8jetspuppimass"             );
+  // iEvent.put(std::move(ak8jets_puppi_eta                ), "ak8jetspuppieta"              );
+  // iEvent.put(std::move(ak8jets_puppi_phi                ), "ak8jetspuppiphi"              );
+
   iEvent.put(std::move(ak8jets_softdropPuppiSubjet1     ), "ak8jetssoftdropPuppiSubjet1"  );
   iEvent.put(std::move(ak8jets_softdropPuppiSubjet2     ), "ak8jetssoftdropPuppiSubjet2"  );
   iEvent.put(std::move(ak8jets_puppi_softdropMass       ), "ak8jetspuppisoftdropMass"     );
+
+  iEvent.put(std::move(ak8jets_bDiscriminatorNames      ), "ak8jetsbDiscriminatorNames" );
+  iEvent.put(std::move(ak8jets_bDiscriminators          ), "ak8jetsbDiscriminators"     );
 
   iEvent.put(std::move(ak8jets_deep_bindisc_top         ), "ak8jetsdeepbindisctop"        );
   iEvent.put(std::move(ak8jets_deep_bindisc_w           ), "ak8jetsdeepbindiscw"          );
