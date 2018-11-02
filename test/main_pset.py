@@ -8,12 +8,15 @@ import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
 opts = VarParsing.VarParsing('python')
 vpbool = VarParsing.VarParsing.varType.bool
+vpstring = VarParsing.VarParsing.varType.string
 opts.register('data'    , False  , mytype=vpbool)
 opts.register('prompt'  , False  , mytype=vpbool)
 opts.register('fastsim' , False , mytype=vpbool)
 opts.register('relval'  , False , mytype=vpbool)
 opts.register('triginfo'  , False , mytype=vpbool)
+opts.register('name'  , "" , mytype=vpstring) # hacky variable to override name for samples where last path/process is "DQM"
 opts.parseArguments()
+
 # be smart. if fastsim, it's obviously MC
 # if it's MC, it's obviously not prompt
 if opts.fastsim: opts.data = False
@@ -24,7 +27,8 @@ print """PSet is assuming:
    fastsim? {}
    relval? {}
    triginfo? {}
-""".format(bool(opts.data), bool(opts.prompt), bool(opts.fastsim), bool(opts.relval), bool(opts.triginfo))
+   name = {}
+""".format(bool(opts.data), bool(opts.prompt), bool(opts.fastsim), bool(opts.relval), bool(opts.triginfo), str(opts.name))
 
 import CMS3.NtupleMaker.configProcessName as configProcessName
 configProcessName.name="PAT"
@@ -45,6 +49,9 @@ if opts.fastsim:
     configProcessName.fastSimName="HLT"
     configProcessName.name2=configProcessName.fastSimName
 configProcessName.isFastSim=opts.fastsim
+
+if str(opts.name).strip():
+    configProcessName.name = str(opts.name).strip()
 
 # CMS3
 process = cms.Process("CMS3")
@@ -215,27 +222,36 @@ if usePrivateSQlite:
 process.outpath = cms.EndPath(process.out)
 process.out.outputCommands = cms.untracked.vstring( 'drop *' )
 
-if not opts.data:
-    from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
+# Comment this out because we need to rerun full MET computation for both data and MC in order to include MET Recipe 2017 EE noise fix
+#if not opts.data:
+#    from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
     #default configuration for miniAOD reprocessing, change the isData flag to run on data
     #for a full met computation, remove the pfCandColl input
-    runMetCorAndUncFromMiniAOD(process,
-                               isData=opts.data,
-                               )
+#    runMetCorAndUncFromMiniAOD(process,
+#                               isData=opts.data,
+#                               )
+
+from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
+runMetCorAndUncFromMiniAOD(process,
+                           isData=opts.data,
+			   fixEE2017 = True,
+			   fixEE2017Params = {'userawPt': True, 'PtThreshold':50.0, 'MinEtaThreshold':2.65, 'MaxEtaThreshold': 3.139} ,
+			   postfix = "ModifiedMET"
+)
 
 process.out.outputCommands = cms.untracked.vstring( 'drop *' )
 process.out.outputCommands.extend(cms.untracked.vstring('keep *_*Maker*_*_CMS3*'))
 
 ### -------------------------------------------------------------------
-### the lines below remove the L2L3 residual corrections when processing data
+### the lines below remove the L2L3 residual corrections when processing MC
 ### -------------------------------------------------------------------
 if not applyResiduals:
     process.patPFMetT1T2Corr.jetCorrLabelRes = cms.InputTag("L3Absolute")
     process.patPFMetT1T2SmearCorr.jetCorrLabelRes = cms.InputTag("L3Absolute")
     process.patPFMetT2Corr.jetCorrLabelRes = cms.InputTag("L3Absolute")
     process.patPFMetT2SmearCorr.jetCorrLabelRes = cms.InputTag("L3Absolute")
-    process.shiftedPatJetEnDown.jetCorrLabelUpToL3Res = cms.InputTag("ak4PFCHSL1FastL2L3Corrector")
-    process.shiftedPatJetEnUp.jetCorrLabelUpToL3Res = cms.InputTag("ak4PFCHSL1FastL2L3Corrector")
+#    process.shiftedPatJetEnDown.jetCorrLabelUpToL3Res = cms.InputTag("ak4PFCHSL1FastL2L3Corrector")
+#    process.shiftedPatJetEnUp.jetCorrLabelUpToL3Res = cms.InputTag("ak4PFCHSL1FastL2L3Corrector")
 ### ------------------------------------------------------------------
 
 # end Run corrected MET maker
@@ -291,7 +307,9 @@ if opts.data:
         process.pfJetMaker *
         process.pfJetPUPPIMaker *
         process.subJetMaker *
+        process.fullPatMetSequenceModifiedMET * # for MET recipe for 2017 EE noise fix
         process.pfmetMaker *
+	process.pfmetMakerModifiedMET *
         process.pfmetpuppiMaker *
         process.hltMakerSequence *
         process.miniAODrhoSequence *
@@ -322,7 +340,9 @@ else:
         process.pfJetMaker *
         process.pfJetPUPPIMaker *
         process.subJetMaker *
+	process.fullPatMetSequenceModifiedMET * # for MET recipe for 2017 EE noise fix
         process.pfmetMaker *
+	process.pfmetMakerModifiedMET *
         process.pfmetpuppiMaker *
         process.hltMakerSequence *
         process.miniAODrhoSequence *
@@ -367,10 +387,10 @@ process.Timing = cms.Service("Timing",
 # process.eventMaker.datasetName = cms.string('SUPPLY_DATASETNAME')
 # process.maxEvents.input = cms.untracked.int32(SUPPLY_MAX_NEVENTS)
 
-# process.GlobalTag.globaltag = "94X_dataRun2_ReReco_EOY17_v2"
+process.GlobalTag.globaltag = "94X_dataRun2_v10"
 process.out.fileName = cms.untracked.string('ntuple.root')
 #process.source.fileNames = cms.untracked.vstring('/store/data/Run2017D/SingleMuon/MINIAOD/31Mar2018-v1/80000/1E703527-F436-E811-80A7-E0DB55FC1055.root')
-# process.source.fileNames = cms.untracked.vstring('file:1E703527-F436-E811-80A7-E0DB55FC1055.root')
-process.eventMaker.CMS3tag = cms.string('V04')
-process.eventMaker.datasetName = cms.string('/DYJetsToLL_M-50_HT-800to1200_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM')
-#process.maxEvents.input = cms.untracked.int32(1000)
+#process.source.fileNames = cms.untracked.vstring('/store/data/Run2016C/MuonEG/MINIAOD/17Jul2018-v1/50000/E039F2A0-228C-E811-AE2F-A0369FE2C22E.root')
+process.eventMaker.CMS3tag = cms.string('test')
+process.eventMaker.datasetName = cms.string('/MuonEG/Run2016C-17Jul2018-v1/MINIAOD')
+process.maxEvents.input = cms.untracked.int32(1000)
