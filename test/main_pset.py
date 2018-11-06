@@ -231,6 +231,13 @@ process.out.outputCommands = cms.untracked.vstring( 'drop *' )
 #                               isData=opts.data,
 #                               )
 
+# Making a note here to save others some pain
+# If you check out the NtupleMaker fresh and try to run with the MET recipe, it won't work! :)
+# Why? Because the merge-topic of cms-met:METFixEE2017_949_v2 changed under our feet :)
+# It must be something important to put in a change, right? Yeah, need to make sure the parameters are all camelCase: https://github.com/cms-met/cmssw/commit/4ac9dfe0b8f38689c560e540dcf7c6f2bea46d49
+# Solution, just replace the offending line (fixEE2017Params) with
+#         fixEE2017Params = {'userawPt': True, 'ptThreshold':50.0, 'minEtaThreshold':2.65, 'maxEtaThreshold': 3.139} ,
+# Thus, need to make sure the PSet is consistent with the compiled/tarred version of NtupleMaker/CMSSW.
 from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
 runMetCorAndUncFromMiniAOD(process,
                            isData=opts.data,
