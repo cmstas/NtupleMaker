@@ -134,7 +134,7 @@ process.load("RecoEgamma.ElectronIdentification.egmGsfElectronIDs_cfi")
 process.load("RecoEgamma.ElectronIdentification.ElectronMVAValueMapProducer_cfi")
 process.egmGsfElectronIDs.physicsObjectSrc = cms.InputTag('slimmedElectrons',"",configProcessName.name)
 process.electronMVAValueMapProducer.srcMiniAOD = cms.InputTag('slimmedElectrons',"",configProcessName.name)
-process.egmGsfElectronIDSequence = cms.Sequence(process.electronMVAValueMapProducer * process.egmGsfElectronIDs)
+process.egmGsfElectronIDSequence = cms.Sequence(process.electronMVAVariableHelper * process.electronMVAValueMapProducer * process.egmGsfElectronIDs)
 my_id_modules = [
         # 'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Spring15_25ns_V1_cff',
         # 'RecoEgamma.ElectronIdentification.Identification.heepElectronID_HEEPV60_cff',
@@ -307,6 +307,8 @@ process.TransientTrackBuilderESProducer = cms.ESProducer("TransientTrackBuilderE
     ComponentName=cms.string('TransientTrackBuilder')
 )
 
+process.genMaker.year = cms.int32(opts.setup)
+
 if opts.data:
     process.p = cms.Path(
         process.metFilterMaker *
@@ -403,19 +405,11 @@ process.Timing = cms.Service("Timing",
 # process.eventMaker.datasetName = cms.string('SUPPLY_DATASETNAME')
 # process.maxEvents.input = cms.untracked.int32(SUPPLY_MAX_NEVENTS)
 
-# process.GlobalTag.globaltag = "auto:run2_mc"
-from Configuration.AlCa.GlobalTag import GlobalTag
-# process.GlobalTag = GlobalTag(process.GlobalTag, '94X_mc2017_realistic_v14', '')
-process.GlobalTag = GlobalTag(process.GlobalTag, "auto:run2_mc", "")
-print process.GlobalTag
-# process.GlobalTag = process.GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
-process.out.fileName = cms.untracked.string('ntuple.root')
-#process.source.fileNames = cms.untracked.vstring('/store/data/Run2017D/SingleMuon/MINIAOD/31Mar2018-v1/80000/1E703527-F436-E811-80A7-E0DB55FC1055.root')
-#process.source.fileNames = cms.untracked.vstring('/store/data/Run2016C/MuonEG/MINIAOD/17Jul2018-v1/50000/E039F2A0-228C-E811-AE2F-A0369FE2C22E.root')
 
-process.genMaker.year = cms.int32(opts.setup)
-
-process.eventMaker.CMS3tag = cms.string('test')
-process.eventMaker.datasetName = cms.string('/MuonEG/Run2016C-17Jul2018-v1/MINIAOD')
-
+process.GlobalTag.globaltag = "94X_mc2017_realistic_v14"
+process.out.fileName = cms.untracked.string("ntuple.root")
+# process.source.fileNames = cms.untracked.vstring("/store/mc/RunIIFall17MiniAODv2/ttHToNonbb_M125_TuneCP5_13TeV-powheg-pythia8/MINIAODSIM/PU2017_12Apr2018_new_pmx_94X_mc2017_realistic_v14-v1/50000/00436CBC-6B70-E811-850C-00259075D70C.root")
+process.source.fileNames = cms.untracked.vstring("file:00436CBC-6B70-E811-850C-00259075D70C.root")
+process.eventMaker.CMS3tag = cms.string("test")
+process.eventMaker.datasetName = cms.string("/MuonEG/Run2016C-17Jul2018-v1/MINIAOD")
 process.maxEvents.input = cms.untracked.int32(1000)
