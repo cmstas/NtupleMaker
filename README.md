@@ -20,29 +20,33 @@ process.maxEvents.input = cms.untracked.int32(3000) # max number of events; note
 ```
 4. Finally, 
   * `cmsRun main_pset.py data=True prompt=True` to run on _prompt_ data
-  * `cmsRun main_pset.py data=False` to run on _FullSim_ MC
-  * `cmsRun main_pset.py fastsim=True` to run on _FastSim_ MC
+  * `cmsRun main_pset.py data=False year=2017` to run on _FullSim_ MC
+  * `cmsRun main_pset.py fastsim=True year=2017` to run on _FastSim_ MC
 
 
 ### Some quickstart parameters
-In `install.sh`, use `CMS3Tag=CMS4_V00-00-07` and `CMSSW_release=CMSSW_9_4_0` to run on the RunII 2017 re-reco sample for `/DoubleEG/Run2017F-17Nov2017-v1/MINIAOD`
+In `install.sh`, use `CMS3Tag=CMS4_V09-04-20` and `CMSSW_release=CMSSW_9_4_9` to run on the RunII 2017 re-reco sample for `/ttHToNonbb_M125_TuneCP5_13TeV-powheg-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_new_pmx_94X_mc2017_realistic_v14-v1/MINIAODSIM`
 
 And paste the following at the end of `main_pset.py`.
 
 ```
-process.GlobalTag.globaltag = "94X_dataRun2_ReReco_EOY17_v2"
+process.GlobalTag.globaltag = "94X_mc2017_realistic_v14"
 process.out.fileName = cms.untracked.string('ntuple.root') # output
-process.source.fileNames = cms.untracked.vstring(['/store/data/Run2017F/DoubleEG/MINIAOD/17Nov2017-v1/60000/EAED912B-F7DE-E711-8E9B-0242AC1C0500.root']) # input
-process.eventMaker.CMS3tag = cms.string('CMS4_V00-00-07') # doesn't affect ntupling, only for bookkeeping later on
-process.eventMaker.datasetName = cms.string('/DoubleEG/Run2017F-17Nov2017-v1/MINIAOD') # doesn't affect ntupling, only for bookkeeping later on
-process.maxEvents.input = cms.untracked.int32(3000) # max number of events; note that crab overrides this to -1
+process.source.fileNames = cms.untracked.vstring(['/store/mc/RunIIFall17MiniAODv2/ttHToNonbb_M125_TuneCP5_13TeV-powheg-pythia8/MINIAODSIM/PU2017_12Apr2018_new_pmx_94X_mc2017_realistic_v14-v1/50000/00436CBC-6B70-E811-850C-00259075D70C.root']) # input
+process.eventMaker.CMS3tag = cms.string('dummy') # doesn't affect ntupling, only used for bookkeeping later on
+process.eventMaker.datasetName = cms.string('dummy') # doesn't affect ntupling, only for bookkeeping later on
+process.maxEvents.input = cms.untracked.int32(3000) # max number of events; note that batch stuff overrides this to -1
 ```
 
-Run it with `cmsRun main_pset.py data=True`.
+Run it with `cmsRun main_pset.py data=True setup=2017`.
 
 ### ProjectMetis details
-To make a tarfile for use with Metis, the current string looks something like this
+To make a tarfile for use with Metis, the current monster string looks something like this
 ```bash
-mtarfile lib_CMS4_V09-04-13_946p1.tar.gz -e $CMSSW_BASE/external/$SCRAM_ARCH/lib/libmxnet_predict.so $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/mxnet_predict.xml --xz
+# include stuff for DeepAK8, 
+# drop some unnecessary matrix element stuff, 
+# drop tons of hella-large EGamma weight files...
+# use xz with best compression, 
+mtarfile lib_CMS4_V09-04-20_949.tar.xz -e $CMSSW_BASE/external/$SCRAM_ARCH/lib/libmxnet_predict.so $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/mxnet_predict.xml  \
+        --xz --xz_level 9 -x "ZZMatrixElement/MELA/data/Pdfdata" "*ZZMatrixElement/MELA/data/*.root" "*Identification/data/MVA/*.gz" "_puinfo_"
 ```
-due to the presence of the heavy object tagger, which unfortunately requires us to copy .so files :( So messy.
