@@ -313,7 +313,10 @@ void GenMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
       lheHandler_NNPDF30_NLO->setHandle(&LHEEventInfo);
       lheHandler_NNPDF30_NLO->extract();
 
-      if (genEvtInfo.isValid()) *genHEPMCweight = genEvtInfo->weight();
+      if (genEvtInfo.isValid()){
+        *genHEPMCweight = genEvtInfo->weight();
+        if (*genHEPMCweight==1. && lheHandler->getLHEOriginalWeight()!=1.) *genHEPMCweight = lheHandler->getLHEOriginalWeight();
+      }
       else *genHEPMCweight = lheHandler->getLHEOriginalWeight(); // Default was also 1, so if !genEvtInfo.isValid(), the statement still passes
       *genHEPMCweight_2016 = *genHEPMCweight; // lheHandler_NNPDF30_NLO->getLHEOriginalWeight() should give the same value
       *genHEPMCweight *= lheHandler->getWeightRescale();
