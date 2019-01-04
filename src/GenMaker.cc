@@ -158,7 +158,7 @@ void GenMaker::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {
 
 // ------------ method called to produce the data  ------------
 void GenMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
-  
+
     unique_ptr<vector<int> >                    genps_id              (new vector<int>                   );
     unique_ptr<vector<int> >                    genps_id_mother       (new vector<int>                   );
     unique_ptr<vector<int> >                    genps_id_simplemother (new vector<int>                   );
@@ -315,7 +315,7 @@ void GenMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
       if (genEvtInfo.isValid()){
         *genHEPMCweight = genEvtInfo->weight();
-        if (*genHEPMCweight==1. && lheHandler->getLHEOriginalWeight()!=1.) *genHEPMCweight = lheHandler->getLHEOriginalWeight();
+        if (*genHEPMCweight==1.) *genHEPMCweight = lheHandler->getLHEOriginalWeight();
       }
       else *genHEPMCweight = lheHandler->getLHEOriginalWeight(); // Default was also 1, so if !genEvtInfo.isValid(), the statement still passes
       *genHEPMCweight_2016 = *genHEPMCweight; // lheHandler_NNPDF30_NLO->getLHEOriginalWeight() should give the same value
