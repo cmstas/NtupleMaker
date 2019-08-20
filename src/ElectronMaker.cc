@@ -1133,10 +1133,10 @@ void ElectronMaker::produce(Event& iEvent, const EventSetup& iSetup) {
         // Conversions //
         /////////////////
 
-	reco::ConversionRef conv_ref = ConversionTools::matchedConversion(*el, convs_h, beamSpot);
+	const reco::Conversion* conv_ref = ConversionTools::matchedConversion(*el, *convs_h, beamSpot);
 	float vertexFitProbability = -1.; 
-	if(!conv_ref.isNull()) {
-            const reco::Vertex &vtx = conv_ref.get()->conversionVertex(); 
+	if(conv_ref) {
+            const reco::Vertex &vtx = conv_ref->conversionVertex(); 
             if (vtx.isValid()) {
                 vertexFitProbability = TMath::Prob( vtx.chi2(), vtx.ndof());
             } 
@@ -1432,8 +1432,8 @@ double ElectronMaker::electronIsoValuePF(const GsfElectron& el, const Vertex& vt
     float pfjurveto = 0.;
     float pfjurvetoq = 0.;
 
-    //TrackRef siTrack     = el.closestCtfTrackRef();
-    TrackRef siTrack     = el.closestTrack();
+    TrackRef siTrack     = el.closestCtfTrackRef();
+    // TrackRef siTrack     = el.closestTrack();
     GsfTrackRef gsfTrack = el.gsfTrack();
 
     if (gsfTrack.isNull() && siTrack.isNull()) return -9999.;

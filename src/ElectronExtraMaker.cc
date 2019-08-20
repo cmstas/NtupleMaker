@@ -54,6 +54,8 @@
 #include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
 #include "Geometry/CommonDetUnit/interface/TrackingGeometry.h"
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
 #include "MagneticField/Engine/interface/MagneticField.h"
@@ -916,31 +918,32 @@ void ElectronExtraMaker::produce(Event& iEvent, const EventSetup& iSetup) {
 	  ///////////////////////////////////////////////////////
 	  // Get crystal info that is not stored in the object //
 	  ///////////////////////////////////////////////////////
-	  EcalClusterLocal ecalLocal;
-	  if(el->superCluster()->seed()->hitsAndFractions().at(0).first.subdetId()==EcalBarrel) {
-	    float cryPhi, cryEta, thetatilt, phitilt;
-	    int ieta, iphi;
-	    ecalLocal.localCoordsEB(*(el->superCluster()->seed()), iSetup, cryEta, cryPhi, ieta, iphi, thetatilt, phitilt);
-	    els_scSeedCryEta         ->push_back(cryEta);
-	    els_scSeedCryPhi         ->push_back(cryPhi);
-	    els_scSeedCryIeta        ->push_back(ieta);
-	    els_scSeedCryIphi        ->push_back(iphi);
-	    els_scSeedCryX           ->push_back(0);
-	    els_scSeedCryY           ->push_back(0);
-	    els_scSeedCryIx          ->push_back(0);
-	    els_scSeedCryIy          ->push_back(0);
+          edm::ESHandle<CaloGeometry> pG;
+          iSetup.get<CaloGeometryRecord>().get(pG);	
+          if(el->superCluster()->seed()->hitsAndFractions().at(0).first.subdetId()==EcalBarrel) {
+              float cryPhi, cryEta, thetatilt, phitilt;
+              int ieta, iphi;
+              egammaTools::localEcalClusterCoordsEB(*(el->superCluster()->seed()), *pG, cryEta, cryPhi, ieta, iphi, thetatilt, phitilt);
+              els_scSeedCryEta         ->push_back(cryEta);
+              els_scSeedCryPhi         ->push_back(cryPhi);
+              els_scSeedCryIeta        ->push_back(ieta);
+              els_scSeedCryIphi        ->push_back(iphi);
+              els_scSeedCryX           ->push_back(0);
+              els_scSeedCryY           ->push_back(0);
+              els_scSeedCryIx          ->push_back(0);
+              els_scSeedCryIy          ->push_back(0);
 	  } else {
-	    float cryX, cryY, thetatilt, phitilt;
-	    int ix, iy;
-	    ecalLocal.localCoordsEE(*(el->superCluster()->seed()), iSetup, cryX, cryY, ix, iy, thetatilt, phitilt);
-	    els_scSeedCryX           ->push_back(cryX);
-	    els_scSeedCryY           ->push_back(cryY);
-	    els_scSeedCryIx          ->push_back(ix);
-	    els_scSeedCryIy          ->push_back(iy);
-	    els_scSeedCryEta         ->push_back(0);
-	    els_scSeedCryPhi         ->push_back(0);
-	    els_scSeedCryIeta        ->push_back(0);
-	    els_scSeedCryIphi        ->push_back(0);
+              float cryX, cryY, thetatilt, phitilt;
+              int ix, iy;
+              egammaTools::localEcalClusterCoordsEE(*(el->superCluster()->seed()), *pG, cryX, cryY, ix, iy, thetatilt, phitilt);
+              els_scSeedCryX           ->push_back(cryX);
+              els_scSeedCryY           ->push_back(cryY);
+              els_scSeedCryIx          ->push_back(ix);
+              els_scSeedCryIy          ->push_back(iy);
+              els_scSeedCryEta         ->push_back(0);
+              els_scSeedCryPhi         ->push_back(0);
+              els_scSeedCryIeta        ->push_back(0);
+              els_scSeedCryIphi        ->push_back(0);
 	  }
 
 	  ///////////////////////////////////
@@ -1588,8 +1591,8 @@ double ElectronExtraMaker::electronIsoValuePF(const GsfElectron& el, const Verte
     float pfjurveto = 0.;
     float pfjurvetoq = 0.;
 
-    //TrackRef siTrack     = el.closestCtfTrackRef();
-    TrackRef siTrack     = el.closestTrack();
+    TrackRef siTrack     = el.closestCtfTrackRef();
+    // TrackRef siTrack     = el.closestTrack();
     GsfTrackRef gsfTrack = el.gsfTrack();
 
     if (gsfTrack.isNull() && siTrack.isNull()) return -9999.;

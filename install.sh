@@ -1,10 +1,10 @@
 #!/bin/bash
 
 #USER INPUTS
-CMS3Tag=combined
-CMSSW_release=CMSSW_10_2_5
+CMS3Tag=dev_106
+CMSSW_release=CMSSW_10_6_1_patch1
 CMSSW_release_name=    #Leave this blank if you don't know what it is.  It's just a marker in case you have multiple identical directories.  Don't forget the underscore!
-export SCRAM_ARCH=slc6_amd64_gcc700
+export SCRAM_ARCH=slc7_amd64_gcc700
 
 #--Here there be dragons----
 export CMS_PATH=/cvmfs/cms.cern.ch
@@ -17,12 +17,12 @@ eval `scramv1 runtime -sh`
 git cms-init --upstream-only
 
 # For MET recipe for 2017 EE noise fix
-git cms-merge-topic cms-met:METFixEE2017_949_v2_backport_to_102X
+# git cms-merge-topic cms-met:METFixEE2017_949_v2_backport_to_102X
 
 # For reading 2 electron iso branches in 102X from 94X sample
 # https://github.com/cms-sw/cmssw/issues/25573
 # NOTE this should be taken out once merged/backported into CMSSW
-git cms-merge-topic Sam-Harper:IORulesForPFClusIso_1025
+# git cms-merge-topic Sam-Harper:IORulesForPFClusIso_1025
 
 cd src
 

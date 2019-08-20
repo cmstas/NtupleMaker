@@ -31,6 +31,8 @@
 
 #include "DataFormats/Math/interface/LorentzVector.h"
 #include "DataFormats/Math/interface/deltaR.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 #include "RecoEgamma/EgammaTools/interface/EcalClusterLocal.h"
 #include "RecoEcal/EgammaCoreTools/interface/Mustache.h"
 #include "TVector2.h"
@@ -494,11 +496,12 @@ void PhotonExtraMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
             ///////////////////////////////////////////////////////
             // Get crystal info that is not stored in the object //
             ///////////////////////////////////////////////////////
-            EcalClusterLocal ecalLocal;
+            edm::ESHandle<CaloGeometry> pG;
+            iSetup.get<CaloGeometryRecord>().get(pG);
             if(photon->superCluster()->seed()->hitsAndFractions().at(0).first.subdetId()==EcalBarrel) {
                 float cryPhi, cryEta, thetatilt, phitilt;
                 int ieta, iphi;
-                ecalLocal.localCoordsEB(*(photon->superCluster()->seed()), iSetup, cryEta, cryPhi, ieta, iphi, thetatilt, phitilt);
+                egammaTools::localEcalClusterCoordsEB(*(photon->superCluster()->seed()), *pG, cryEta, cryPhi, ieta, iphi, thetatilt, phitilt);
                 photons_scSeedCryEta         ->push_back(cryEta);
                 photons_scSeedCryPhi         ->push_back(cryPhi);
                 photons_scSeedCryIeta        ->push_back(ieta);
@@ -510,7 +513,7 @@ void PhotonExtraMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
             } else {
                 float cryX, cryY, thetatilt, phitilt;
                 int ix, iy;
-                ecalLocal.localCoordsEE(*(photon->superCluster()->seed()), iSetup, cryX, cryY, ix, iy, thetatilt, phitilt);
+                egammaTools::localEcalClusterCoordsEE(*(photon->superCluster()->seed()), *pG, cryX, cryY, ix, iy, thetatilt, phitilt);
                 photons_scSeedCryX           ->push_back(cryX);
                 photons_scSeedCryY           ->push_back(cryY);
                 photons_scSeedCryIx          ->push_back(ix);
