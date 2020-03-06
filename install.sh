@@ -37,7 +37,7 @@ source setup/patchesToSource.sh
 
 # MELA
 git clone git@github.com:cms-analysis/HiggsAnalysis-ZZMatrixElement.git ZZMatrixElement
-(cd ZZMatrixElement; git fetch; git checkout -b from-v222 v2.2.2; source setup.sh -j 12;)
+(cd ZZMatrixElement; git fetch; git checkout -b from-v223 v2.2.3; source setup.sh -j 12;)
 
 # MELA Analytics
 git clone git@github.com:usarica/MelaAnalytics.git
