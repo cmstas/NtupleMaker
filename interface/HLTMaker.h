@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <memory>
 
 // user include files
 #include "DataFormats/Common/interface/TriggerResults.h"
@@ -42,6 +43,11 @@
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 #include "FWCore/Common/interface/TriggerNames.h"
+
+#include "HLTrigger/HLTcore/interface/TriggerExpressionData.h"
+#include "HLTrigger/HLTcore/interface/TriggerExpressionEvaluator.h"
+#include "HLTrigger/HLTcore/interface/TriggerExpressionParser.h"
+#include "L1Trigger/L1TGlobal/interface/L1TGlobalUtil.h"
 
 #include "TRegexp.h"
 #include "TString.h"
@@ -87,6 +93,9 @@ private:
   // auto_ptr<vector<unsigned int> > cached_prescales   ;
   vector<unsigned int> cached_prescales   ;
   vector<unsigned int> cached_l1prescales   ;
+
+  edm::EDGetToken algToken_;
+  std::shared_ptr<l1t::L1TGlobalUtil> l1GtUtils_;
 
   // auto_ptr<vector<unsigned int> > prescales   ;
   // auto_ptr<vector<unsigned int> > l1prescales ;

@@ -37,7 +37,6 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenRunInfoProduct.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
-#include "CommonLHETools/LHEHandler/interface/LHEHandler.h" 
 
 
 //
@@ -63,21 +62,14 @@ private:
      edm::EDGetTokenT<reco::GenParticleCollection> genParticlesToken;
      edm::EDGetTokenT<GenEventInfoProduct> genEvtInfoToken;
      edm::EDGetTokenT<pat::PackedGenParticleCollection> packedGenParticlesToken;
-     edm::EDGetTokenT<LHEEventProduct> LHEEventInfoToken;
-     edm::EDGetTokenT<LHERunInfoProduct> LHERunInfoToken;
-     edm::InputTag genRunInfoInputTag_;
      bool ntupleOnlyStatus3_;
      bool ntupleDaughters_;
      bool ntuplePackedGenParticles_;
      std::vector<int> vmetPIDs_;
-     edm::InputTag LHEInputTag_;
 
      double inclusiveCrossSectionValue_;
      double exclusiveCrossSectionValue_;
      double kfactorValue_;
-
-     std::shared_ptr<LHEHandler> lheHandler; // LHEHandler for default PDFs
-     std::shared_ptr<LHEHandler> lheHandler_NNPDF30_NLO; // LHEHandler for the 2016-like PDFs
 
 };
 

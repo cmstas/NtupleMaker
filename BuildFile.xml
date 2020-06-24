@@ -23,20 +23,22 @@
 <use   name="RecoEcal/EgammaCoreTools"/>
 <use   name="RecoEgamma/EgammaTools"/>
 <use   name="JetMETCorrections/Objects"/>
+<use   name="RecoVertex/VertexPrimitives"/>
 <use   name="HLTrigger/HLTcore"/>
+<use   name="L1Trigger/L1TGlobal"/>
 <use   name="CMS3/Dictionaries"/>
 <use   name="EgammaAnalysis/ElectronTools"/>
 <use   name="PhysicsTools/NanoAOD"/>
 <use   name="NNKit/FatJetNN"/>
-<use   name="ZZMatrixElement/MELA"/>
-<use   name="MelaAnalytics/EventContainer"/>
-<use   name="CommonLHETools/LHEHandler"/>
+<!-- <use   name="ZZMatrixElement/MELA"/> -->
+<!-- <use   name="MelaAnalytics/EventContainer"/> -->
+<!-- <use   name="CommonLHETools/LHEHandler"/> -->
 <use   name="root"/>
 <use   name="clhep"/>
 
 <Flags CPPDEFINES="CMSSW_VERSION=$(shell echo ${CMSSW_VERSION}|sed -e s/CMSSW_// -e s/_//g -e s/patch\.//)"/>
 <Flags CPPDEFINES="CMSSW_VERSION_MAJOR=$(shell echo ${CMSSW_VERSION}|sed -e s/CMSSW_// -e s/_.*//g)"/>
-<flags CPPFLAGS="-I$(CMSSW_BASE)/src/ZZMatrixElement/MELA/interface/" />
+<!-- <flags CPPFLAGS="-I$(CMSSW_BASE)/src/ZZMatrixElement/MELA/interface/" /> -->
 
 <lib   name="EG"/>
 <flags   EDM_PLUGIN="1"/>

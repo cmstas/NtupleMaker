@@ -35,17 +35,17 @@ source setup/patchesToSource.sh
 # No CMSSW packages beyond this point #
 #######################################
 
-# MELA
-git clone git@github.com:cms-analysis/HiggsAnalysis-ZZMatrixElement.git ZZMatrixElement
-(cd ZZMatrixElement; git fetch; git checkout -b from-v223 v2.2.3; source setup.sh -j 12;)
+# # MELA
+# git clone git@github.com:cms-analysis/HiggsAnalysis-ZZMatrixElement.git ZZMatrixElement
+# (cd ZZMatrixElement; git fetch; git checkout -b from-v223 v2.2.3; source setup.sh -j 12;)
 
-# MELA Analytics
-git clone git@github.com:usarica/MelaAnalytics.git
-(cd MelaAnalytics; git fetch; git checkout -b from-v19 v1.9)
+# # MELA Analytics
+# git clone git@github.com:usarica/MelaAnalytics.git
+# (cd MelaAnalytics; git fetch; git checkout -b from-v19 v1.9)
 
-# Common LHE tools
-git clone git@github.com:usarica/CommonLHETools.git
-(cd CommonLHETools; git fetch; git checkout -b from-v132 v1.3.2)
+# # Common LHE tools
+# git clone git@github.com:usarica/CommonLHETools.git
+# (cd CommonLHETools; git fetch; git checkout -b from-v132 v1.3.2)
 
 cd $CMSSW_BASE/src
 scram b -j 25

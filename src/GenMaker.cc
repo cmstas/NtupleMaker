@@ -44,19 +44,6 @@ GenMaker::GenMaker(const edm::ParameterSet& iConfig) :
     ntuplePackedGenParticles_   = iConfig.getParameter<bool>                      ("ntuplePackedGenParticles");
     vmetPIDs_                   = iConfig.getUntrackedParameter<std::vector<int> >("vmetPIDs"             );
     kfactorValue_               = iConfig.getUntrackedParameter<double>           ("kfactor"              );
-    LHEEventInfoToken = consumes<LHEEventProduct >(iConfig.getParameter<edm::InputTag>("LHEInputTag"));
-    LHERunInfoToken = consumes<LHERunInfoProduct, edm::InRun>(inputPSet.getParameter<edm::InputTag>("LHEInputTag"));
-
-    lheHandler = std::make_shared<LHEHandler>(
-      MELAEvent::nCandidateVVModes, -1,
-      (false ? LHEHandler::doHiggsKinematics : LHEHandler::noKinematics),
-      year, LHEHandler::keepDefaultPDF, LHEHandler::keepDefaultQCDOrder
-      );
-    lheHandler_NNPDF30_NLO = std::make_shared<LHEHandler>(
-      MELAEvent::nCandidateVVModes, -1,
-      (false ? LHEHandler::doHiggsKinematics : LHEHandler::noKinematics),
-      year, LHEHandler::tryNNPDF30, LHEHandler::tryNLO
-      );
 
     produces<vector<int> >                    ("genpsid"              ).setBranchAlias("genps_id"              );
     produces<vector<int> >                    ("genpsidmother"        ).setBranchAlias("genps_id_mother"       );
@@ -141,21 +128,6 @@ void GenMaker::endJob()
 }
 
 void GenMaker::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {
-    static bool firstRun=true;
-
-    //These get filled later
-    inclusiveCrossSectionValue_ = 0;
-    exclusiveCrossSectionValue_ = 0;
-
-    if (firstRun){ // Do these only at the first run
-      // Extract LHE header
-      edm::Handle<LHERunInfoProduct> lhe_runinfo;
-      iRun.getByLabel(inputPSet.getParameter<edm::InputTag>("LHEInputTag"), lhe_runinfo);
-      lheHandler->setHeaderFromRunInfo(&lhe_runinfo);
-      lheHandler_NNPDF30_NLO->setHeaderFromRunInfo(&lhe_runinfo);
-
-      firstRun=false;
-    }
 }
 
 // ------------ method called to produce the data  ------------
@@ -252,112 +224,6 @@ void GenMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     *genps_signalProcessID = genEvtInfo->signalProcessID();
     *genps_qScale          = genEvtInfo->qScale();
     *genps_alphaQCD        = genEvtInfo->alphaQCD();
-
-    //get the MC event weights
-    //if weights do not exist (Pythia), default is weight of 1
-    vector< Handle<HepMCProduct> > hepmc_vect;
-    iEvent.getManyByType(hepmc_vect);
-
-    Handle<LHEEventProduct> LHEEventInfo;
-    iEvent.getByToken(LHEEventInfoToken, LHEEventInfo);
-
-    if (LHEEventInfo.isValid()){
-        vector <gen::WeightsInfo> weightsTemp = LHEEventInfo->weights();
-        for (unsigned int i = 0; i < weightsTemp.size(); i++){
-            genweights->push_back(weightsTemp.at(i).wgt);
-            genweightsID->push_back(weightsTemp.at(i).id);
-        }
-    }
-    if (genEvtInfo.isValid()) {
-        for (unsigned int i = 0; i < genEvtInfo->weights().size(); i++) {
-            genweights->push_back(genEvtInfo->weights()[i]);
-            genweightsID->push_back("");
-        }
-
-    }
-    // }
-    // else {
-    //   genweights->push_back(-999999); 
-    //   genweightsID->push_back("noneFound"); 
-    // }
-
-    HepMC::WeightContainer wc;
-
-    if(hepmc_vect.size() != 0) { //found HepMC branch
-    
-        if(hepmc_vect.size() > 1 ) {
-            edm::LogInfo("OutputInfo") << "GenMaker blindly using first entry in HepMC vector with size larger than 1. BAD? Size is: "<<hepmc_vect.size();
-        }    
-
-        const HepMC::GenEvent *genEvt = hepmc_vect.at(0)->GetEvent();
-
-        // set the event scale / ptHat:
-        double ptHat = genEvt->event_scale();
-        *genps_pthat = ptHat;
-    
-        wc = genEvt->weights();
-
-        float weight = -9999.;
-
-        if(wc.size() > 0 )
-            weight = (float)wc[0];
-
-        *genps_weight = weight;
-
-    } 
-    else
-        *genps_weight = genEvtInfo->weight();
-    //  *genps_weight = 1.;
-
-    if (LHEEventInfo.isValid()){
-      lheHandler->setHandle(&LHEEventInfo);
-      lheHandler->extract();
-
-      lheHandler_NNPDF30_NLO->setHandle(&LHEEventInfo);
-      lheHandler_NNPDF30_NLO->extract();
-
-      if (genEvtInfo.isValid()){
-        *genHEPMCweight = genEvtInfo->weight();
-        if (*genHEPMCweight==1.) *genHEPMCweight = lheHandler->getLHEOriginalWeight();
-      }
-      else *genHEPMCweight = lheHandler->getLHEOriginalWeight(); // Default was also 1, so if !genEvtInfo.isValid(), the statement still passes
-      *genHEPMCweight_2016 = *genHEPMCweight; // lheHandler_NNPDF30_NLO->getLHEOriginalWeight() should give the same value
-      *genHEPMCweight *= lheHandler->getWeightRescale();
-      *genHEPMCweight_2016 *= lheHandler_NNPDF30_NLO->getWeightRescale();
-
-      *gen_LHEweight_QCDscale_muR1_muF1 = lheHandler->getLHEWeight(0, 1.);
-      *gen_LHEweight_QCDscale_muR1_muF2 = lheHandler->getLHEWeight(1, 1.);
-      *gen_LHEweight_QCDscale_muR1_muF0p5 = lheHandler->getLHEWeight(2, 1.);
-      *gen_LHEweight_QCDscale_muR2_muF1 = lheHandler->getLHEWeight(3, 1.);
-      *gen_LHEweight_QCDscale_muR2_muF2 = lheHandler->getLHEWeight(4, 1.);
-      *gen_LHEweight_QCDscale_muR2_muF0p5 = lheHandler->getLHEWeight(5, 1.);
-      *gen_LHEweight_QCDscale_muR0p5_muF1 = lheHandler->getLHEWeight(6, 1.);
-      *gen_LHEweight_QCDscale_muR0p5_muF2 = lheHandler->getLHEWeight(7, 1.);
-      *gen_LHEweight_QCDscale_muR0p5_muF0p5 = lheHandler->getLHEWeight(8, 1.);
-
-      *gen_LHEweight_PDFVariation_Up = lheHandler->getLHEWeight_PDFVariationUpDn(1, 1.);
-      *gen_LHEweight_PDFVariation_Dn = lheHandler->getLHEWeight_PDFVariationUpDn(-1, 1.);
-      *gen_LHEweight_AsMZ_Up = lheHandler->getLHEWeigh_AsMZUpDn(1, 1.);
-      *gen_LHEweight_AsMZ_Dn = lheHandler->getLHEWeigh_AsMZUpDn(-1, 1.);
-
-      *gen_LHEweight_PDFVariation_Up_2016 = lheHandler_NNPDF30_NLO->getLHEWeight_PDFVariationUpDn(1, 1.);
-      *gen_LHEweight_PDFVariation_Dn_2016 = lheHandler_NNPDF30_NLO->getLHEWeight_PDFVariationUpDn(-1, 1.);
-      *gen_LHEweight_AsMZ_Up_2016 = lheHandler_NNPDF30_NLO->getLHEWeigh_AsMZUpDn(1, 1.);
-      *gen_LHEweight_AsMZ_Dn_2016 = lheHandler_NNPDF30_NLO->getLHEWeigh_AsMZUpDn(-1, 1.);
-
-      lheHandler->clear();
-      lheHandler_NNPDF30_NLO->clear();
-    }
-    else{
-      if (genEvtInfo.isValid()) *genHEPMCweight = genEvtInfo->weight();
-      else *genHEPMCweight = *genps_weight;
-      *genHEPMCweight_2016 = *genHEPMCweight; // No other choice really
-    }
-
-    *evt_scale1fb  = 1.; // this value is a placeholder; it will be filled during post-processing
-    *evt_xsec_incl = inclusiveCrossSectionValue_;
-    *evt_xsec_excl = exclusiveCrossSectionValue_;
-    *evt_kfactor   = kfactorValue_;
 
     double sumEt = 0.;
     LorentzVector tempvect(0,0,0,0);

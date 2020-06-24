@@ -40,6 +40,9 @@ hltConfig_(iConfig, consumesCollector(), *this) {
   triggerObjectsToken = consumes<pat::TriggerObjectStandAloneCollection>(iConfig.getUntrackedParameter<string>("triggerObjectsName"));
   triggerResultsToken = consumes<edm::TriggerResults>(edm::InputTag("TriggerResults",       "", processName_));
 
+  algToken_ = consumes<BXVector<GlobalAlgBlk>>(iConfig.getParameter<InputTag>("AlgInputTag"));
+  l1GtUtils_ = std::make_shared<l1t::L1TGlobalUtil>(iConfig, consumesCollector());
+
   produces<TBits>                           (Form("%sbits"        ,processNamePrefix_.Data())).setBranchAlias(Form("%s_bits"       ,processNamePrefix_.Data()));
   produces<vector<TString> >                (Form("%strigNames"   ,processNamePrefix_.Data())).setBranchAlias(Form("%s_trigNames"  ,processNamePrefix_.Data()));
   produces<vector<unsigned int> >           (Form("%sprescales"   ,processNamePrefix_.Data())).setBranchAlias(Form("%s_prescales"  ,processNamePrefix_.Data()));
@@ -51,6 +54,12 @@ hltConfig_(iConfig, consumesCollector(), *this) {
     produces<vector<vector<bool> > >          (Form("%strigObjspassLast"  ,processNamePrefix_.Data())).setBranchAlias(Form("%s_trigObjs_passLast",processNamePrefix_.Data()));
     produces<vector<vector<TString> > >       (Form("%strigObjsfilters"  ,processNamePrefix_.Data())).setBranchAlias(Form("%s_trigObjs_filters",processNamePrefix_.Data()));
   }
+
+  produces<std::vector<std::string> >                (Form("%sscoutl1names"   ,processNamePrefix_.Data())).setBranchAlias(Form("%s_scout_l1names"  ,processNamePrefix_.Data()));
+  produces<vector<unsigned int> >           (Form("%sscoutl1prescales"   ,processNamePrefix_.Data())).setBranchAlias(Form("%s_scout_l1prescales"  ,processNamePrefix_.Data()));
+  produces<vector<bool> >           (Form("%sscoutl1results"   ,processNamePrefix_.Data())).setBranchAlias(Form("%s_scout_l1results"  ,processNamePrefix_.Data()));
+
+  produces<int>           (Form("%sscouthltresult"   ,processNamePrefix_.Data())).setBranchAlias(Form("%s_scout_hltresult"  ,processNamePrefix_.Data()));
   
   // isData_ = iConfig.getParameter<bool>("isData");
   
@@ -175,6 +184,13 @@ void HLTMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   unique_ptr<vector<unsigned int> > prescales   (new vector<unsigned int>);
   unique_ptr<vector<unsigned int> > l1prescales (new vector<unsigned int>);
 
+  unique_ptr<std::vector<std::string> >       scout_l1_names(new std::vector<std::string>);
+  unique_ptr<std::vector<bool> > scout_l1_results   (new std::vector<bool>);
+  unique_ptr<std::vector<unsigned int> > scout_l1_prescales (new std::vector<unsigned int>);
+
+  unique_ptr<int> scout_hlt_result(new int);
+  *scout_hlt_result = 0;
+
   trigNames->reserve(nTriggers);
   trigObjsid->reserve(nTriggers);
   trigObjsp4->reserve(nTriggers);
@@ -192,6 +208,7 @@ void HLTMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
       doFillInformation = false;
       // haveFilledInformation = true;
   }
+
 
   std::vector<bool> doFillTrigger; // map trigger index to decision to fill triggerobjects for it
 
@@ -264,12 +281,52 @@ void HLTMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
           prescales   -> push_back( (cached_prescales).at(i) );
           l1prescales -> push_back( 1 );
       }
+      
+
+      TString pattern("DST_DoubleMu3_noVtx_CaloScouting_v*");
+      pattern.ToLower();
+      TRegexp reg(Form("%s", pattern.Data()), true);
+      TString sname(name);
+      sname.ToLower();
+      bool is_scouting_hlt = (sname.Index(reg) >= 0);
+
+      bool passed = triggerResultsH_->accept(i);
+
+      if (is_scouting_hlt) {
+          if (passed) *scout_hlt_result = 1;
+          // std::cout <<  " name: " << name <<  " passed: " << passed <<  " *scout_hlt_result: " << *scout_hlt_result <<  std::endl;
+
+      }
+
 
       // Passed... F+
-      if (triggerResultsH_->accept(i)){
+      if (passed){
           bits->SetBitNumber(i);
       }
   }
+
+
+    l1GtUtils_->retrieveL1(iEvent, iSetup, algToken_);
+    std::vector<std::string> l1seeds = {
+        "L1_DoubleMu4_SQ_OS_dR_Max1p2",
+        "L1_DoubleMu4p5_SQ_OS_dR_Max1p2",
+        "L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4",
+        "L1_DoubleMu_15_7",
+    };
+    for (auto l1seed : l1seeds) {
+      bool l1bit = 0;
+      int prescale = -1;
+      l1GtUtils_->getFinalDecisionByName(l1seed, l1bit);
+      l1GtUtils_->getPrescaleByName(l1seed, prescale);
+      // l1_result->push_back(l1bit);
+      // l1_name->push_back(l1seed);
+      // l1_prescale->push_back(prescale);
+      scout_l1_names->push_back(l1seed);
+      scout_l1_results->push_back(l1bit);
+      scout_l1_prescales->push_back(prescale);
+
+      // std::cout <<  " l1seed: " << l1seed <<  " l1bit: " << l1bit <<  " prescale: " << prescale <<  std::endl;
+    }
 
 
 
@@ -323,6 +380,7 @@ void HLTMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
 	      if ( id == 81 || id == 82 || id == 83 || IDs[1] == 92) saveFilters = true;
 	    }
 	  }
+      // saveFilters = false; // FIXME NOTE FIXME NOTE
 	  if (saveFilters) {
 	    std::vector< std::string > filter_labels = TO.filterLabels();
 	    for (uint j  = 0; j < filter_labels.size(); j++) {
@@ -352,6 +410,14 @@ void HLTMaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
   iEvent.put(std::move(prescales  ), Form("%sprescales"   , processNamePrefix_.Data() ) );
   iEvent.put(std::move(l1prescales), Form("%sl1prescales" , processNamePrefix_.Data() ) );
   iEvent.put(std::move(trigNames  ), Form("%strigNames"   , processNamePrefix_.Data() ) );
+
+  iEvent.put(std::move(scout_l1_prescales  ), Form("%sscoutl1prescales"   , processNamePrefix_.Data() ) );
+  iEvent.put(std::move(scout_l1_names  ), Form("%sscoutl1names"   , processNamePrefix_.Data() ) );
+  iEvent.put(std::move(scout_l1_results  ), Form("%sscoutl1results"   , processNamePrefix_.Data() ) );
+
+  iEvent.put(std::move(scout_hlt_result), Form("%sscouthltresult"   , processNamePrefix_.Data() ) );
+
+
   
   if (fillTriggerObjects_) {
     iEvent.put(std::move(trigObjsid ), Form("%strigObjsid"  , processNamePrefix_.Data() ) );

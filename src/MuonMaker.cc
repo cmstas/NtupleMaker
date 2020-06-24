@@ -59,6 +59,12 @@
 #include "DataFormats/MuonReco/interface/MuonChamberMatch.h"
 #include "DataFormats/MuonReco/interface/MuonShower.h"
 
+#include "DataFormats/TrackReco/interface/TrackFwd.h"
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
+#include "DataFormats/VertexReco/interface/VertexFwd.h"
+#include "RecoVertex/VertexPrimitives/interface/TransientVertex.h"
+#include "RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h"
+
 
 //////////////
 // typedefs //
@@ -251,6 +257,16 @@ MuonMaker::MuonMaker( const ParameterSet& iConfig ) {
     produces<vector<float>         >("musptRatio"         	).setBranchAlias("mus_ptRatio"                        	);
     produces<vector<float>         >("musptRel"         	).setBranchAlias("mus_ptRel"                        	);
     produces<vector<float>         >("musjetBTagCSV"         	).setBranchAlias("mus_jetBTagCSV"                        	);
+
+    // dimuon vertex stuff
+    produces<float> ("musvtxchi2"   ).setBranchAlias("mus_vtx_chi2"   );
+    produces<float> ("musvtxndof"   ).setBranchAlias("mus_vtx_ndof"   );
+    produces<float> ("musvtxx"      ).setBranchAlias("mus_vtx_x"      );
+    produces<float> ("musvtxy"      ).setBranchAlias("mus_vtx_y"      );
+    produces<float> ("musvtxz"      ).setBranchAlias("mus_vtx_z"      );
+    produces<float> ("musvtxxError" ).setBranchAlias("mus_vtx_xError" );
+    produces<float> ("musvtxyError" ).setBranchAlias("mus_vtx_yError" );
+    produces<float> ("musvtxzError" ).setBranchAlias("mus_vtx_zError" );
 
 } // end Constructor
 
@@ -447,6 +463,13 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
     edm::Handle<edm::ValueMap<float> > miniIsoAll_values;
     iEvent.getByToken(miniIsoChgValueMapToken_,miniIsoChg_values);
     iEvent.getByToken(miniIsoAllValueMapToken_,miniIsoAll_values);
+
+
+    // https://github.com/cms-sw/cmssw/blob/02d4198c0b6615287fd88e9a8ff650aea994412e/HeavyFlavorAnalysis/Onia2MuMu/src/Onia2MuMuPAT.cc
+    edm::ESHandle<TransientTrackBuilder> theB;
+    iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theB);
+    KalmanVertexFitter vtxFitter(true);
+    std::vector<reco::TransientTrack> t_tks;
   
     ///////////
     // Muons // 
@@ -476,6 +499,12 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
                 break;
             }
         }
+
+        if (muon->isMediumMuon() and muon->pt()>=5.) {
+            auto trk = muon->track(); // tracker only
+            t_tks.push_back(theB->build(trk));
+        }
+
 
         // float isopt = muon->p4().pt();
         // mus_miniRelIso_chg->push_back((*miniIsoChg_values)[muPtr]/isopt);
@@ -699,6 +728,46 @@ void MuonMaker::produce(Event& iEvent, const EventSetup& iSetup) {
         muonIndex++;
 
     } // end loop on muons
+
+    unique_ptr<float> vchi2(new float);
+    unique_ptr<float> vndof(new float);
+    unique_ptr<float> vx(new float);
+    unique_ptr<float> vy(new float);
+    unique_ptr<float> vz(new float);
+    unique_ptr<float> vxe(new float);
+    unique_ptr<float> vye(new float);
+    unique_ptr<float> vze(new float);
+    *vchi2 = -999.;
+    *vndof  = -999.;
+    *vx = -999.;
+    *vy = -999.;
+    *vz = -999.;
+    *vxe = -999.;
+    *vye = -999.;
+    *vze = -999.;
+    if (t_tks.size() >= 2) {
+        TransientVertex vertex = vtxFitter.vertex(t_tks);
+        if (vertex.isValid()) {
+            *vchi2 = vertex.totalChiSquared();
+            *vndof  = vertex.degreesOfFreedom();
+            *vx = vertex.position().x();
+            *vy = vertex.position().y();
+            *vz = vertex.position().z();
+            *vxe = vertex.positionError().cxx();
+            *vye = vertex.positionError().cyy();
+            *vze = vertex.positionError().cyy();
+            // std::cout <<  " vx: " << vx <<  " vy: " << vy <<  " vz: " << vz <<  std::endl;
+        }
+    }
+
+    iEvent.put(std::move(vchi2), branchprefix_+"vtxchi2"   );
+    iEvent.put(std::move(vndof), branchprefix_+"vtxndof"   );
+    iEvent.put(std::move(vx)   , branchprefix_+"vtxx"      );
+    iEvent.put(std::move(vy)   , branchprefix_+"vtxy"      );
+    iEvent.put(std::move(vz)   , branchprefix_+"vtxz"      );
+    iEvent.put(std::move(vxe)  , branchprefix_+"vtxxError" );
+    iEvent.put(std::move(vye)  , branchprefix_+"vtxyError" );
+    iEvent.put(std::move(vze)  , branchprefix_+"vtxzError" );
 
     ////////////                                                                       
     // Global //
