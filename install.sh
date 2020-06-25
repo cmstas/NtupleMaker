@@ -40,8 +40,8 @@ git clone git@github.com:cms-analysis/HiggsAnalysis-ZZMatrixElement.git ZZMatrix
 (cd ZZMatrixElement; git fetch; git checkout -b from-v223 v2.2.3; source setup.sh -j 12;)
 
 # MELA Analytics
-git clone git@github.com:usarica/MelaAnalytics.git
-(cd MelaAnalytics; git fetch; git checkout -b from-v19 v1.9)
+git clone git@github.com:MELALabs/MelaAnalytics.git
+(cd MelaAnalytics; git fetch; git checkout -b from-v21 v2.1)
 
 # Common LHE tools
 git clone git@github.com:usarica/CommonLHETools.git
